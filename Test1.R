@@ -1,2 +1,2 @@
-z<-c(0,0,0,0)
+print("Bom Dia meus amigos!")
 
