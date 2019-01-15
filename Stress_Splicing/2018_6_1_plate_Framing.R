@@ -20,11 +20,11 @@ dat2=dat2[,-1]
 
 #Create data frame for Calibrated values
 calib_df = dat2 %>% filter(str_detect(sampleID, "g"))
-write.csv(calib_df, file="Calibrated_Data Frame.csv")
+write.csv(calib_df, file="Calibrated_Data_Frame.csv")
 
 #Create data frame for Experimental values
 exp_df = dat2 %>% filter(str_detect(sampleID, "g")==FALSE)
-write.csv(exp_df, file="Experimental_Data Frame.csv")
+write.csv(exp_df, file="Experimental_Data_Frame.csv")
 
 
 
