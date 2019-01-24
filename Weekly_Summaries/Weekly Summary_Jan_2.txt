@@ -1,0 +1,11 @@
+Weekly Summary - Week of Jan. 14, 2019
+
+What I worked on and learned this past week:
+-- Read documentation on working with covariates in QTL mapping
+   -> How to interpret analysis results using vQTL; Learned about the models effects of phenotype and genotype variance, backcross and intercross; Interval mapping and LOD scores and p-values; When covariates should be included; When interactions are significant and should be included
+-- Talked and reviewed with Michael the process and methods we are using to create the model from qPCR calibration data in order to apply to experimental data
+-- Worked on setting up Python environment for contribution to hyperspectral imaging project; Scheduled group meeting times
+-- Created R code to clean and transpose plate data
+-- Created R code to separate into data frames the experimental data from calibration data for the 2018 qPCR dataset; Updated GitHub and OSF files
+-- Adjusted code for qPCR analyses to work with subsequent 2019 plate data
+-- Worked with Julia on code to combine the qPCR gene types with matching height data; Shared files and fork repos on GitHub 
