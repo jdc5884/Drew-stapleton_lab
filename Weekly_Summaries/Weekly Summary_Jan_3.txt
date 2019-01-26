@@ -1,0 +1,15 @@
+What I worked on this week:
+- Listened to the podcast episode on heterogenous treatment effects in genetic testing (and use of puns)
+- For the career-furthering activity, I listened to two podcast episodes on the evolvement and future of technology use in city processes (https://www.wired.com/brandlab/2015/09/the-maketechhuman-podcast-the-future-of-smart-cities/) and gentrification (https://soundcloud.com/knightcities/joe-cortright-produced)
+- Using the separated qPCR calibrated and experimental data frames, began writing the code to create the qPCR adjustment model from the calibrated data to use for the experimental
+  --> Worked with Michael to understand the components and methods
+  --> Begun creating the adjustment model code based off code from MB (Neill Thesis)
+  --> Added script to optimize the data frames for processing when reading in
+  --> Continuing to work on the code used to restructure the data frames to match the derivatives with the correct starting quantities and test
+- Continued working with Julia on the vQTL script for matching the Mo###
+
+This week I will focus on:
+- Writing the for-loop used in the adjustment script to iterate through the columns to separate test and all_products values
+- Fixing the issue with the Mo### vQTL code - errors adding back in the trait info 
+- Meeting with David about the next steps with hyperspectral imaging 
+- Compiling resources and docs used thus far for Dr. Wang to review; Begin laying out to write the introduction part of capstone report
