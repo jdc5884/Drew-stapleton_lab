@@ -1,0 +1,15 @@
+Weekly Summary - Week of Feb. 3, 2019
+
+What I worked on last week:
+-- Made progress on resolving issues with code to transform data frames into factorial arrangement
+-- Met with JC and Dr. Wang to update him on projects and progress, ask questions about coding issues, prepare introduction report, clarify model
+-- Completed CITI training modules
+-- Finished setting up Python environments
+-- Began reviewing hyperspectral docs and exercises 
+
+What I will focus on this week:
+-- Familiarizing myself with Python and numpy exercises in preparation for more involvement with hyperspectral imaging (continue to read documentation, complete DR recommended practice problems)
+-- Write introduction report for Dr. Wang's briefing
+-- Update LinkedIn
+-- Change structure of git hub forks
+-- Continue working with JC on Mo### matching - Dr. Wang gave some clarification 
