@@ -1,0 +1,13 @@
+Weekly Summary - Week of Feb. 3, 2019
+
+What I worked on last week:
+-- Completed numpy exercises per DR in preparation for hyperspectral imaging 
+-- Met with JC and Dr. Wang - continued bringing him up to date, helped better understand what types of questions to ask and how to answer them, made a plan for further updates 
+-- Met with MB about questions created post-Dr. Wang meeting, u-stats, created clearer plan for qPCR adjustment model
+-- Updated LinkedIn
+
+
+What I will focus on this week:
+-- Read additional general introductory python documentation, complete additional exercises
+-- Finish and review introduction report with Dr. Wang
+-- Work on the u-stat script in adjustment model
