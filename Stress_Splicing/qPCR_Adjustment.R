@@ -1,19 +1,35 @@
-# qPCR Adjustment using U-Statistics
-# Author: Michael Byrd
+# qPCR Adjustment
+
+library(tidyr)
 
 # Mac Directory
-setwd("/Users/mbyrd/StapletonLab/Stapleton_Lab/qPCR/adjustment")
+setwd("/Users/andrewnorris/stapleton_lab/Stress_Splicing/2018_6")
 
-# Windows Directory
-# setwd("C:/Users/mbyrd/Documents/Stapleton/Stapleton_Lab/qPCR/adjustment")
+# PC Directory
+#setwd()
 
+# Read in Calibration Data
+data <- read.csv(file = "2018_6_1_Calibrated_Data_Frame_with_Derivatives.csv")
+# Format starting quantity as numeric, not in scientific notation
+options(scipen=5)
+# Reorder columns with starting quantity first, remove unneeded ordering column (how can I better word this...)
+data <- data[c(4,2,3,5,6)]
+# Indicate if sample is 'Plus' or 'Minus'
+data['sampleID_Plus'] <- grepl('plus', data$sampleID)
 
-# Calibration Data
-data <- read.csv(file = "Neill2018calibrations.csv")
-# Expiremental Data
-exp_data <- read.csv(file = "corrected17June_Neill Thesis RNA samples.csv")                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+# Read in Expiremental Data
+exp_data <- read.csv(file = "2018_6_1_Experimental_Data_Frame_with_Derivatives.csv")     
+# Format starting quantity as numeric
+exp_data <- exp_data[c(4,2,3,5,6)]
+# Remove first extra labeling row
+exp_data <- exp_data[-1,]
+
+## If zero matrix is the way to go... #Create zero matrix to which data will input
+# relevant = data.frame(matrix(rep(0,length(dat$sampleID)*dim(exp_data)[1]), ncol = dim(exp_data)[1]))
+##test1 <- data$reaction_type("test1")
+
 # cp Values of Calibration data
-test1 <- data$test1_Cp1
+test1 <- data$cpD1
 all_prod <- data$all_productsCp1
 # The ratio of the cp values
 ratio <- all_prod/test1

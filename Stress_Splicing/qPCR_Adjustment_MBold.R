@@ -1,33 +1,19 @@
-# qPCR Adjustment
-
-library(tidyr)
+# qPCR Adjustment using U-Statistics
+# Author: Michael Byrd
 
 # Mac Directory
-setwd("/Users/andrewnorris/stapleton_lab/Stress_Splicing")
+setwd("/Users/mbyrd/StapletonLab/Stapleton_Lab/qPCR/adjustment")
 
-# PC Directory
-#setwd()
-
-# Read in Calibration Data
-data <- read.csv(file = "Calibrated_Data_Frame_with_Derivatives.csv")
-# Format starting quantity as numeric, not in scientific notation
-options(scipen=5)
-# Reorder columns with starting quantity first, remove unneeded ordering column (how can I better word this...)
-data <- data[c(4,2,3,5,6)]
-
-# Read in Expiremental Data
-exp_data <- read.csv(file = "Experimental_Data_Frame_with_Derivatives.csv")     
-# Format starting quantity as numeric
-exp_data <- exp_data[c(4,2,3,5,6)]
-# Remove first extra labeling row
-exp_data <- exp_data[-1,]
+# Windows Directory
+# setwd("C:/Users/mbyrd/Documents/Stapleton/Stapleton_Lab/qPCR/adjustment")
 
 
-#Separate reaction type into separate columns
-separate(data, reaction_type,   
-
+# Calibration Data
+data <- read.csv(file = "Neill2018calibrations.csv")
+# Expiremental Data
+exp_data <- read.csv(file = "corrected17June_Neill Thesis RNA samples.csv")                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
 # cp Values of Calibration data
-test1 <- data$cpD1
+test1 <- data$test1_Cp1
 all_prod <- data$all_productsCp1
 # The ratio of the cp values
 ratio <- all_prod/test1
