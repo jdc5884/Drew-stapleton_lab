@@ -1,0 +1,17 @@
+Weekly Summary - Weeks of Feb. 10 & 17, 2019
+
+What I worked on the last two weeks:
+-- Created plots of calibrated and experimental data to assist in model selection
+-- Further adjusted data frames for for-loops and dot plots
+-- Finished for-loop code for calibrated data; close to finishing for-loop for experimental data (just a few errors to iron out)
+-- Met with JC, MB, and Dr. Wang re: model selection, continuing discussion on model selection and verifying the direction JC and I are headed in
+-- Ran other plate data set through framing code
+
+
+What I will focus on during these upcoming weeks:
+-- Calculate log values of cpD1 for additional plots
+-- Create additional dot plots for meeting re: model selection w/ MB, JC and Dr. Wang
+-- Write code for data transformations to be done prior to running adjustment mode
+-- Finish the for-loop for experimental data
+-- Meet w/ JC and Dr. Wang on Tuesday
+-- Write more concise code to transform plate data prior to running through framing for adjustment model  
