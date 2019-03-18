@@ -1,0 +1,16 @@
+Weekly Summary - Weeks of March 3rd & March 10th
+
+What I worked on the past two weeks:
+- Finished/fixed errors in the for-loop to create experimental data frame
+- Wrote code to combine/process different types of CSV files of plate data so any data provided can be processed by the adjustment model
+- Ran other months' plate data through framing code to check errors
+- Researched widely-used qPCR methods, incorporating the adjustment model for slopes of test1 and all_products
+  --> Compiling summary for Dr. Wang and all for the purpose of having an explanation in one place
+-  
+
+What I will work in the next two weeks:
+- Write summary for all regarding methods used in adjustment model, pre-analysis process
+- Modify existing adjustment model to work with calibrated and experimental data frames
+- Finish framing model and integration into one complete R code that can process both experimental and calibrated data through one streamlined process
+- Meet with Holly Oates-Barker and JC to clarify analyses
+- Make plan/schedule for rest of semester, remaining parts of project
