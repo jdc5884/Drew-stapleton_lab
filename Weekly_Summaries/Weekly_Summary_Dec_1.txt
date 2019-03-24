@@ -1,0 +1,10 @@
+What I have learned and worked on and learned for Stapleton Lab during December:
+
+- Learned how to use Teamline to assign tasks and share information
+- Doing tutorials to familiarize myself with Terminal and Unix - common commands, navigating files and directories, submitting batch script
+- Reviewing R tutorials and Thomas’ example code for Random Family vQTL
+- Created accounts used in research - GitHub, TACC, OSF
+- Learning how to use GitHub - the commands involved (e.g. fork, add, commit, push, pull), how to control Git through Terminal
+- Familiarizing myself with Stampede - fundamentals of the system, how to process files from Git; Once I am back I should have the credentials to fully log on and use the system
+- Learning about vQTL R package through various research material and supporting documentation, and the biological/genetic concepts the package is concerned with
+- Learning about the data structure for the qPCR and vQTL ER stress splicing ratio analyses
