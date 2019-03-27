@@ -63,9 +63,9 @@ deriv2=deriv2[,-1]
 calib_df = deriv2 %>% filter(str_detect(sampleID, "g"))
 # Sort by starting quantity
 calib_df = calib_df[order(calib_df$starting_quantity),]
-write.csv(calib_df, file="2018_11_Calibrated_Data_Frame.csv")
-# Create new transposed data set
-calib_data=read.csv(file="2018_11_Calibrated_Data_Frame.csv", header=TRUE) 
+
+
+
 # Create empty vectors for for-loop to input cpD1 values
 test1 = c()
 allP = c()
