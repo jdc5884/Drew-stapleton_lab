@@ -9,7 +9,7 @@ library(stringr)
 library(tidyverse)
 library(dplyr)
 # Mac Directory
-setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_11")
+setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_8")
 #setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_(MONTH)")
 # PC Directory
 #setwd(~/Desktop/GIThub/StapletonLab/StressSplicing/qPCR/)
@@ -17,12 +17,12 @@ setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_11")
 ### READ IN DERIVATIVE DATA###
 # In the case of having two separate CSV files of calculated derivatives,
 # use this code to combine, prior to the following transpositions:
-deriv.1<-read.csv(file = "2018_11_1_plate_qPCR_output.csv", header=FALSE)
-deriv.2<-read.csv(file = "2018_11_2_plate_qPCR_output.csv", header=FALSE)
-deriv=cbind(deriv.1, deriv.2)
+#deriv.1<-read.csv(file = "2018_11_1_plate_qPCR_output.csv", header=FALSE)
+#deriv.2<-read.csv(file = "2018_11_2_plate_qPCR_output.csv", header=FALSE)
+#deriv=cbind(deriv.1, deriv.2)
 
 # In the case of having one CSV containing calculated derivatives, use this code:
-#deriv=read.csv(file = "(YEAR_MONTH_PLATE_qPCR_output.csv", header=FALSE)
+deriv=read.csv(file = "2018_8_1_plate_qPCR_output.csv", header=FALSE)
 
 ########################################################## 
 ################### Initial Data Framing #################
@@ -46,7 +46,8 @@ deriv = deriv[,-c(5,6)]
 deriv['sampleID_Minus'] = grepl('minus', deriv$sampleID)
 # Remove 'Minus' values (include only gblock+ values), and indicator (T/F) column
 minus = which(deriv$sampleID_Minus)
-deriv = deriv[-minus,]
+# IF "minus" RETURNS EMPTY VALUES, COMMENT OUT COMMAND BELOW
+#deriv = deriv[-minus,]
 deriv = deriv[,-c(5)]
 
 ### COMPLETED INITIAL DATA FRAMING ###
