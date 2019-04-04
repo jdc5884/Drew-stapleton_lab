@@ -7,6 +7,8 @@ library(pracma)
 library(stringr)
 library(tidyverse)
 library(dplyr)
+library(MASS)
+
 # Mac Directory
 setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_11")
 #setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_(MONTH)")
@@ -16,9 +18,9 @@ setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_11")
 ### READ IN DERIVATIVE DATA ###
 # In the case of having two separate CSV files of calculated derivatives,
 # use this code to combine, prior to the following transpositions:
-#deriv.1<-read.csv(file = "2018_11_1_plate_qPCR_output.csv", header=FALSE)
-#deriv.2<-read.csv(file = "2018_11_2_plate_qPCR_output.csv", header=FALSE)
-#deriv=cbind(deriv.1, deriv.2)
+deriv.1<-read.csv(file = "2018_11_1_plate_qPCR_output.csv", header=FALSE)
+deriv.2<-read.csv(file = "2018_11_2_plate_qPCR_output.csv", header=FALSE)
+deriv=cbind(deriv.1, deriv.2)
 
 # In the case of having one CSV containing calculated derivatives, use this code:
 #deriv=read.csv(file = "(YEAR_MONTH_PLATE_qPCR_output.csv", header=FALSE)
@@ -93,16 +95,17 @@ calib_data = cbind(calib_data, ratio)
 ### COMPLETED CALIBRATED DATA FRAME ###
 
 
-########################################################## NO LONGER USING ORDINAL LOGISTIC MODEL
+########################################################## 
 ##### Ordinal Logicistic Regression Calibrated Data ######
 ##########################################################
-#require(MASS)
+calib_data$startq = ordered(calib_data$startq, levels = levels(calib_data$startq))
+calib_data$ratio = allP/test1
+# Ordinal Logistic
+OLR = polr(startq~ratio,data = calib_data, Hess = TRUE)
+summary(OLR)
+(ctable <- coef(summary(OLR)))
 
-#ordinal logistic
-#OLR = polr(startq~ratio,data = calib_data, Hess = TRUE)
-#summary(OLR)
-#(ctable <- coef(summary(OLR)))
-##########################################################
+### COMPLETED LOGISTIC REGRESSION ###
 
 
 ########################################################## 

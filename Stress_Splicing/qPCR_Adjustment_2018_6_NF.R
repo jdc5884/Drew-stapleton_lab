@@ -7,6 +7,8 @@ library(pracma)
 library(stringr)
 library(tidyverse)
 library(dplyr)
+library(MASS)
+
 # Mac Directory
 setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_6")
 #setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_(MONTH)")
@@ -94,16 +96,17 @@ calib_data = cbind(calib_data, ratio)
 ### COMPLETED CALIBRATED DATA FRAME ###
 
 
-########################################################## NO LONGER USING ORDINAL LOGISTIC MODEL
+########################################################## 
 ##### Ordinal Logicistic Regression Calibrated Data ######
 ##########################################################
-#require(MASS)
+calib_data$startq = ordered(calib_data$startq, levels = levels(calib_data$startq))
+calib_data$ratio = allP/test1
+# Ordinal Logistic
+OLR = polr(startq~ratio,data = calib_data, Hess = TRUE)
+summary(OLR)
+(ctable <- coef(summary(OLR)))
 
-#ordinal logistic
-#OLR = polr(startq~ratio,data = calib_data, Hess = TRUE)
-#summary(OLR)
-#(ctable <- coef(summary(OLR)))
-##########################################################
+### COMPLETED LOGISTIC REGRESSION ###
 
 
 ########################################################## 
