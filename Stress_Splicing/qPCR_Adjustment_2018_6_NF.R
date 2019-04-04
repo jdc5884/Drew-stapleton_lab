@@ -8,7 +8,7 @@ library(stringr)
 library(tidyverse)
 library(dplyr)
 # Mac Directory
-setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_11")
+setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_6")
 #setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_(MONTH)")
 # PC Directory
 #setwd("C:/Users/twili/Desktop/GIThub/StapletonLab/StressSplicing/qPCR")
@@ -22,6 +22,7 @@ setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_11")
 
 # In the case of having one CSV containing calculated derivatives, use this code:
 #deriv=read.csv(file = "(YEAR_MONTH_PLATE_qPCR_output.csv", header=FALSE)
+deriv=read.csv(file = "2018_6_1_qPCR_output_withHeaders.csv", header=FALSE)
 
 ########################################################## 
 ################### Initial Data Framing #################
