@@ -24,7 +24,7 @@ setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_6")
 
 # In the case of having one CSV containing calculated derivatives, use this code:
 #deriv=read.csv(file = "(YEAR_MONTH_PLATE_qPCR_output.csv", header=FALSE)
-deriv=read.csv(file = "2018_6_1_qPCR_output_withHeaders.csv", header=FALSE)
+deriv=read.csv(file = "2018_06_01_plate_qPCR_output_2019_04_04.csv", header=FALSE)
 
 ########################################################## 
 ################### Initial Data Framing #################
@@ -34,6 +34,8 @@ deriv=read.csv(file = "2018_6_1_qPCR_output_withHeaders.csv", header=FALSE)
 deriv = deriv[-1,-1]
 # Transpose derivatives to be in equivalent format as raw plate data
 deriv = as.data.frame(t(deriv), header=TRUE)
+# Remove blank column (4th)
+#deriv = deriv[,-5]
 # Rename columns
 colnames(deriv)=c("reaction_type", "sampleID", "starting_quantity", "cpD1", "cpD2")
 # Remove extra labels row
@@ -159,7 +161,7 @@ exp_df = exp_df[order(exp_df$starting_quantity),]
 # Remove first and last rows (unnecessary labeling)
 exp_df = exp_df[-1,]
 exp_df = exp_df[-nrow(exp_df),]
-exp_df$sampleID = as.numeric(as.character(exp_df$sampleID))
+#exp_df$sampleID = as.numeric(as.character(exp_df$sampleID))
 exp_df$cpD1 = as.numeric(as.character(exp_df$cpD1))
 exp_data = exp_df
 # Order data by sampleID
@@ -199,7 +201,7 @@ for(i in 1:length(exp_data$sampleID)){
 }
 # Bind test1 and allProd cpD1 values by sample ID, convert to data frame
 exp_data = as.data.frame(cbind(sampleID.exp, test1.exp, allP.exp))
-exp_data$sampleID.exp = as.numeric(as.character(exp_data$sampleID.exp))
+#exp_data$sampleID.exp = as.numeric(as.character(exp_data$sampleID.exp))
 exp_data$test1.exp = as.numeric(as.character(exp_data$test1.exp))
 exp_data$allP.exp = as.numeric(as.character(exp_data$allP.exp))
 # Calculate ratios for experimental data 
@@ -216,8 +218,8 @@ exp_data = cbind(exp_data, ratio.exp)
 ########################################################## 
 
 # Using the adjustment model on the expiremental data
-new = data.frame(ratio = exp_data$allP/exp_data$test1)
-predict(adj_model, new , interval = "confidence")
+new = data.frame((ratio = exp_data$allP/exp_data$test1), sampleID.exp)
+predict = as.data.frame(predict(OLR, new , interval = "confidence"))
 #---> Fill in any remaining parts of experimental adjusmtent model
 
 ### COMPLETED ADJUSTMENT MODEL - EXPERIMENTAL DATA ###
