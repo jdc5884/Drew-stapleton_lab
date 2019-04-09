@@ -111,10 +111,10 @@ summary(OLR)
 ### COMPLETED LOGISTIC REGRESSION ###
 
 
-########################################################## 
-########### ADJUSTMENT MODEL - Calibrated Data ###########
-########################################################## 
-
+# ########################################################## 
+# ########### ADJUSTMENT MODEL - Calibrated Data ###########
+# ########################################################## 
+# 
 # Create empty vectors for for-loop input
 data = as.data.frame(calib_data)
 data$test1 = as.numeric(as.character(data$test1))
@@ -130,23 +130,11 @@ for (i in 1:(nrow(data)/3)){
   adj <- mean(outer(t_x, t_y, "-"))
   adj_val <- c(adj_val, adj, adj, adj)
 }
-adjusted_test1 <- test1 + adj_val 
+adjusted_test1 <- test1 + adj_val
 # Append adjusted test1 values and adjustment value to data set
 calib_data=cbind(data,adjusted_test1,adj_val)
 # Write Calibrated Data CSV --> Used in "qPCR_Plotting" code for visuals
 #write.csv(file="YEAR_MONTH_Calibrated_DF", calib_data)
-
-
-### LINEAR MODEL ### --> NO LONGER BEING USED
-# Creating the adjustment model lm(y-axis~x-axis)
-# Changed adj_val^2 to adj_val to try to make the model better --> VERIFY THIS WITH DR. WANG
-#adj_model <- lm(adj_val~ratio) #Adjusted/avg slopes model --> to get JC VQTL vals 
-#summary(adj_model)
-#par(mfrow = c(2,2))
-#plot(adj_model)
-#dev.off()
-#scatter.smooth(ratio, adj_val)
-#abline(ratio, adj_val)
 
 ### COMPLETED ADJUSTMENT MODEL - CALIBRATED DATA ###
 
@@ -214,12 +202,32 @@ exp_data = cbind(exp_data, ratio.exp)
 ### COMPLETED EXPERIMENTAL DATA FRAME ###
 
 ########################################################## 
-########## ADJUSTMENT MODEL - Experimental Data ##########
+#### PREDICT STARTING QUANTITIES - Experimental Data ####
 ########################################################## 
 
 # Using the adjustment model on the expiremental data
 new = data.frame((ratio = exp_data$allP/exp_data$test1), sampleID.exp)
-predict = as.data.frame(predict(OLR, new , interval = "confidence"))
-#---> Fill in any remaining parts of experimental adjusmtent model
+exp_predict_sq = as.data.frame(predict(OLR, new , interval = "confidence"))
+# Append sample ID's and corresponding starting quantity predictions
+exp_predict_sq = cbind(exp_predict_sq, exp_data$sampleID.exp)
+# Rename columns, re-order
+colnames(exp_predict_sq)=c("predicted_sq", "sampleID.exp")
+exp_predict_sq = exp_predict_sq[c(2,1)]
+#exp_predict_sq$predicted_sq = as.numeric(as.character(exp_predict_sq$predicted_sq))
+#exp_predict_sq$sampleID.exp = as.numeric(as.character(exp_predict_sq$sampleID.exp))
+# Merge complete experimental data frame with predicted starting quantities data frame by sample ID
+exp_data_predict = merge.data.frame(exp_data, exp_predict_sq, by="sampleID.exp")
 
 ### COMPLETED ADJUSTMENT MODEL - EXPERIMENTAL DATA ###
+
+########################################################## 
+#### ADJUSTMENT VALUE BY STARTING QUANTITYKEY ####
+########################################################## 
+
+# Take calib data, extract s.q. vals, extract adjustment value,
+# Group by s.q. value (want one value for each row/s.q.)
+# Merge this with exp_data_predict
+
+
+
+
