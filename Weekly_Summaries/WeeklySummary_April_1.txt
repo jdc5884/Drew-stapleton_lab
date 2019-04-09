@@ -1,0 +1,22 @@
+Weekly Summaries - Weeks of March 17; March 24; March 31; April 1
+
+What I worked on the past weeks:
+- Met with Dr. Wang and JC to iron-out methods and model used -- ordinal logistic model (OLR - ordinal logistic regression model) to predict starting quantities; Compare summary of OLR to logistic model based on percentiles of ratios
+- Finished experimental data frame; fixed errors encountered with other months' plate data
+- Fixed errors in calibrated data frame for 2018_11 month
+- Verified other months' plate data runs through framing code
+- Finished writing adjustment model code
+- Created plots of calibrated vs. experimental CP values for model and methods justification
+- Created and ran code to use ordinal logistic model (per Dr. Wang) to predict starting quantities of experimental samples
+- Added code to remove invalid observations from the data set while framing to run the OLR
+- Completed NSF researcher training course
+
+
+What I will work in the next two weeks:
+- Write code to match calibrated adjustment values with experimental samples after s.q. has been predicted via OLR
+- Adjust OLR code to account for independence of calibrated data values (allP or test1) at each starting quantity
+- Create code for another logistic model (based on percentile of ratio) for comparison with the ordinal logistic model fit -- finding most accurate method of prediction for our samples
+- Add code for invalid observations to be written in a separate CSV file including CP values
+- Write code to plot qPCR cycle data for observations with unusual CP values
+- Compare ordinal logistic model with logistic model based on percentile summaries with Dr. Wang
+- Continue working on presentation of methods, model, written summary for Dr. Wang
