@@ -225,9 +225,27 @@ exp_data_predict = merge.data.frame(exp_data, exp_predict_sq, by="sampleID.exp")
 ########################################################## 
 
 # Take calib data, extract s.q. vals, extract adjustment value,
+  # Create new d.f. w s.q. 
 # Group by s.q. value (want one value for each row/s.q.)
 # Merge this with exp_data_predict
 
+# Create new data frame containing only predicted s.q. and adj_val
+sq.adjval = as.data.frame(cbind(as.numeric(as.character(calib_data$startq)), calib_data$adj_val))
+sq.adjval$V1=as.factor(format(sq.adjval$V1, scientific=FALSE))
+colnames(sq.adjval)=c("predicted_sq", "adj_val")
+# Remove repeat rows
+sq.adjval = sq.adjval[!duplicated(sq.adjval), ]
+# Match adjustment value for each s.q. with corresponding predicted s.q. in experimental data frame
+exp_data_predict = merge(exp_data_predict, sq.adjval, by='predicted_sq')
+exp_data_predict = exp_data_predict[order(exp_data_predict$sampleID.exp),]
+exp_data_predict = exp_data_predict[c(2,3,4,5,6,1)]
 
+### PLOTS for Presentation ###
+
+# Filter observatinos with unusual (~1.00) CP vals
+exp_data_filtered = exp_data_predict %>% filter((exp_data_predict$test1.exp < 2) == FALSE)
+exp_data_filtered = exp_data_filtered %>% filter((exp_data_filtered$allP.exp < 2) == FALSE)
+# Boxplot comparing calib and exp ratios
+boxplot(calib_data$ratio, exp_data_filtered$ratio.exp, ylab="Ratio", names=c("Calibrated", "Experimental"), main="Comparison of Ratios")
 
 
