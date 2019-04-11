@@ -221,13 +221,8 @@ exp_data_predict = merge.data.frame(exp_data, exp_predict_sq, by="sampleID.exp")
 ### COMPLETED ADJUSTMENT MODEL - EXPERIMENTAL DATA ###
 
 ########################################################## 
-#### ADJUSTMENT VALUE BY STARTING QUANTITYKEY ####
+#### ADJUSTMENT VALUE BY STARTING QUANTITY ####
 ########################################################## 
-
-# Take calib data, extract s.q. vals, extract adjustment value,
-  # Create new d.f. w s.q. 
-# Group by s.q. value (want one value for each row/s.q.)
-# Merge this with exp_data_predict
 
 # Create new data frame containing only predicted s.q. and adj_val
 sq.adjval = as.data.frame(cbind(as.numeric(as.character(calib_data$startq)), calib_data$adj_val))
@@ -239,6 +234,11 @@ sq.adjval = sq.adjval[!duplicated(sq.adjval), ]
 exp_data_predict = merge(exp_data_predict, sq.adjval, by='predicted_sq')
 exp_data_predict = exp_data_predict[order(exp_data_predict$sampleID.exp),]
 exp_data_predict = exp_data_predict[c(2,3,4,5,6,1)]
+
+for (x in calib_data$allP){
+  for (y in calib_data$test1):
+   # if sq.item = sq.item.x
+      # item/item.x
 
 ### PLOTS for Presentation ###
 
