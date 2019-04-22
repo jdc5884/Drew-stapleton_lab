@@ -108,6 +108,12 @@ OLR = polr(startq~ratio,data = calib_data, Hess = TRUE)
 summary(OLR)
 (ctable <- coef(summary(OLR)))
 
+# Ordinal Logistic by Percentile
+OLR = polr(startq~ratio,data = calib_data, Hess = TRUE)
+summary(OLR)
+(ctable <- coef(summary(OLR)))
+
+
 ### COMPLETED LOGISTIC REGRESSION ###
 
 
@@ -142,6 +148,7 @@ calib_data=cbind(data,adjusted_test1,adj_val)
 ########################################################## 
 ################ Experimental Data Framing ###############
 ########################################################## 
+
 # Create/Write data frame for Experimental values
 exp_df = deriv %>% filter(str_detect(sampleID, "g")==FALSE)
 # Sort by starting quantity
@@ -235,11 +242,87 @@ exp_data_predict = merge(exp_data_predict, sq.adjval, by='predicted_sq')
 exp_data_predict = exp_data_predict[order(exp_data_predict$sampleID.exp),]
 exp_data_predict = exp_data_predict[c(2,3,4,5,6,1)]
 
-for (x in calib_data$allP){
-  for (y in calib_data$test1):
-   # if sq.item = sq.item.x
-      # item/item.x
+### FROM JULIAS EXAMPLE CODE -- developing code for combination ratios for qPCR ###
+startquan = as.character(calib_data$startq)
+allprod = as.numeric(calib_data$allP)
+t1 = as.numeric(calib_data$test1)
+dat = data.frame(cbind(startquan,allprod,t1), stringsAsFactors = FALSE)
 
+dat$allprod = as.numeric(dat$allprod)
+dat$t1 = as.numeric(dat$t1)
+
+divide <- function(col1, col2){
+  r = c()
+  for (i in col1){
+    r = cbind(r,col1[i]/col2)
+  }
+  return(r) 
+}
+
+group = as.data.frame(split(dat, startquan))
+
+group0.01 = group[,c(1:3)]
+colnames(group0.01)=c("startquan", "allprod", "t1")
+#for (i in group0.01){
+ # print(cbind(i$startquan,(divide(i$allprod, i$t1))))
+#}
+
+#group0.01 = group0.01 %>%
+  # mutate(ratio1 = allprod[1,]/t1[i]) %>%
+  # mutate(ratio2 = allprod[2,]/t1[i]) %>%
+  # mutate(ratio3 = allprod[3,]/t1[i]) 
+#group0.01
+#for (i in group0.01){
+ # print(cbind(i$startquan,(divide(i$allprod, i$t1))))
+#}
+
+divide(group0.01$allprod, group0.01$t1)  
+
+group0.05 = group[,c(4:6)]
+
+group0.10 = group[,c(7:9)]
+
+group0.50 = group[,c(10:12)]
+
+group1.00 = group[,c(13:15)]
+
+group5.00 = group[,c(16:18)]
+
+group10.00 = group[,c(19:21)]
+
+group50.00 = group[,c(22:24)]
+
+group100.00 = group[,c(25:27)]
+
+
+for (i in group){
+  print(cbind(i$startquan,(divide(i$allprod, i$t1))))
+}
+
+
+# for (x in 1: length(calib_data$allP)){
+#   for (y in calib_data$test1):
+#    if sq.item = sq.item.x
+#       item/item.x
+# 
+
+      # # For loop -- iterating thru starting quantity and reaction type to return cpD1 values
+      # for(i in 1:length(calib_df$starting_quantity)){
+      #   sq <- calib_df$starting_quantity[i]
+      #   if(i %% 6 == 1){
+      #     startq = c(startq,sq,sq,sq)
+      #   }
+      #   val <- toString(calib_df$reaction_type[i])
+      #   if(strcmp(val, "test1")){
+      #     test1 = c(test1, calib_df$cpD1[i])
+      #   }
+      #   if(strcmp(val, "all_products")){
+      #     allP = c(allP, calib_df$cpD1[i])
+      #   }
+      # }
+
+      
+      
 ### PLOTS for Presentation ###
 
 # Filter observatinos with unusual (~1.00) CP vals
@@ -247,5 +330,6 @@ exp_data_filtered = exp_data_predict %>% filter((exp_data_predict$test1.exp < 2)
 exp_data_filtered = exp_data_filtered %>% filter((exp_data_filtered$allP.exp < 2) == FALSE)
 # Boxplot comparing calib and exp ratios
 boxplot(calib_data$ratio, exp_data_filtered$ratio.exp, ylab="Ratio", names=c("Calibrated", "Experimental"), main="Comparison of Ratios")
+
 
 
