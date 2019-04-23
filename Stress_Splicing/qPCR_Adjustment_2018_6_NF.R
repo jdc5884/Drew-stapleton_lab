@@ -8,6 +8,7 @@ library(stringr)
 library(tidyverse)
 library(dplyr)
 library(MASS)
+library(glm.predict)
 
 # Mac Directory
 setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_6")
@@ -162,28 +163,35 @@ exp_data = cbind(exp_data, ratio.exp)
 
 
 ########################################################## 
-################## Percentile Comparison# ################
-########################################################## 
+################## Percentile Comparison #################
+##########################################################
 
 #Calculate z-score for calibrated data
 calib.zscore = (calib_data$ratio - mean(calib_data$ratio))/sd(calib_data$ratio)
 #Predict calibrated data ratios using experimental data
-y = zratio*sd(ratio.exp)+mean(ratio.exp)
+y = calib.zscore*sd(ratio.exp)+mean(ratio.exp)
 #Append y (predicted calibrated ratios) to calibrated data frame
 calib_data = cbind(calib_data, y)
+
+model = glm(startquan ~ calib.zscore)
+predict (model, data=calib_data)
+
+?predict
+
 #Predict s.q. using ordinal logistic mode
 OLR.calib = polr(startq~y,data = calib_data, Hess = TRUE)
 summary(OLR.calib)
 prediction = as.data.frame(predict(OLR.calib, exp_data$ratio.exp))
 
 
-
 ########################################################## 
-##### Ordinal Logicistic Regression Calibrated Data ######
+###### Ordinal Logistic Regression Calibrated Data #######
 ##########################################################
+
+#   
 calib_data$startq = ordered(calib_data$startq, levels = levels(calib_data$startq))
 calib_data$ratio = allP/test1
-# Ordinal Logistic
+#Ordinal Logistic
 OLR = polr(startq~ratio,data = calib_data, Hess = TRUE)
 summary(OLR)
 (ctable <- coef(summary(OLR)))
@@ -230,7 +238,7 @@ calib_data=cbind(data,adjusted_test1,adj_val)
 
 # Using the adjustment model on the expiremental data
 new = data.frame((ratio = exp_data$allP/exp_data$test1), sampleID.exp)
-exp_predict_sq = as.data.frame(predict(OLR, new , interval = "confidence"))
+exp_predict_sq = as.data.frame(predict(OLR, new, interval = "confidence"))
 # Append sample ID's and corresponding starting quantity predictions
 exp_predict_sq = cbind(exp_predict_sq, exp_data$sampleID.exp)
 # Rename columns, re-order
@@ -258,6 +266,9 @@ exp_data_predict = merge(exp_data_predict, sq.adjval, by='predicted_sq')
 exp_data_predict = exp_data_predict[order(exp_data_predict$sampleID.exp),]
 exp_data_predict = exp_data_predict[c(2,3,4,5,6,1)]
 
+
+
+
 ### FROM JULIAS EXAMPLE CODE -- developing code for combination ratios for qPCR ###
 startquan = as.character(calib_data$startq)
 allprod = as.numeric(calib_data$allP)
@@ -267,83 +278,60 @@ dat = data.frame(cbind(startquan,allprod,t1), stringsAsFactors = FALSE)
 dat$allprod = as.numeric(dat$allprod)
 dat$t1 = as.numeric(dat$t1)
 
+#Create divide funtion - every element in column 1 divided by every element in column 2
 divide <- function(col1, col2){
-  r = c()
+  ratio = NULL;
   for (i in col1){
-    r = cbind(r,col1[i]/col2)
+    ratio = c(ratio,i/col2)
   }
-  return(r) 
+  return(ratio)
 }
-
+#Subset data by starting quantity 
 group = as.data.frame(split(dat, startquan))
-
+#Create data frame for each subsetted s.q.; Rename columns;  Use divide function to calculate all possible ratios
+#SQ: 0.01
 group0.01 = group[,c(1:3)]
 colnames(group0.01)=c("startquan", "allprod", "t1")
-
-group0.01 = divide(group0.01$allprod, group0.01$t1)
-
-# for (i in group0.01){
-#  cbind(i$startquan,(divide(i$allprod, i$t1)))
-# }
-
-
-
-#group0.01 = group0.01 %>%
-  # mutate(ratio1 = allprod[1,]/t1[i]) %>%
-  # mutate(ratio2 = allprod[2,]/t1[i]) %>%
-  # mutate(ratio3 = allprod[3,]/t1[i]) 
-#group0.01
-#for (i in group0.01){
- # print(cbind(i$startquan,(divide(i$allprod, i$t1))))
-#}
-
-divide(group0.01$allprod, group0.01$t1)  
-
+ratios0.01 = as.data.frame(divide(group0.01$allprod, group0.01$t1))  
+#SQ: 0.05
 group0.05 = group[,c(4:6)]
-
+colnames(group0.05)=c("startquan", "allprod", "t1")
+ratios0.05 = as.data.frame(divide(group0.05$allprod, group0.05$t1))  
+#SQ: 0.10
 group0.10 = group[,c(7:9)]
-
+colnames(group0.10)=c("startquan", "allprod", "t1")
+ratios0.10 = as.data.frame(divide(group0.10$allprod, group0.10$t1))  
+#SQ: 0.50
 group0.50 = group[,c(10:12)]
-
+colnames(group0.50)=c("startquan", "allprod", "t1")
+ratios0.50 = as.data.frame(divide(group0.50$allprod, group0.50$t1))  
+#SQ: 1.00
 group1.00 = group[,c(13:15)]
-
+colnames(group1.00)=c("startquan", "allprod", "t1")
+ratios1.00 = as.data.frame(divide(group1.00$allprod, group1.00$t1))  
+#SQ: 5.00
 group5.00 = group[,c(16:18)]
-
+colnames(group5.00)=c("startquan", "allprod", "t1")
+ratios5.00 = as.data.frame(divide(group5.00$allprod, group5.00$t1))  
+#SQ: 10.00
 group10.00 = group[,c(19:21)]
-
+colnames(group10.00)=c("startquan", "allprod", "t1")
+ratios10.00 = as.data.frame(divide(group10.00$allprod, group10.00$t1))  
+#SQ: 50.00
 group50.00 = group[,c(22:24)]
-
+colnames(group50.00)=c("startquan", "allprod", "t1")
+ratios50.00 = as.data.frame(divide(group50.00$allprod, group50.00$t1))  
+#SQ: 100.00
 group100.00 = group[,c(25:27)]
+colnames(group100.00)=c("startquan", "allprod", "t1")
+ratios100.00 = as.data.frame(divide(group100.00$allprod, group100.00$t1))
+#Create new data frame containing all 9 ratios per each s.q.
+ratios = cbind(ratios0.01, ratios0.05, ratios0.10, ratios0.50, ratios1.00, ratios5.00, ratios10.00, ratios50.00, ratios100.00)
+colnames(ratios) = c("0.01", "0.05", "0.10", "0.50", "1.00", "5.00", "10.00", "50.00", "100.00")
 
 
-for (i in group){
-  print(cbind(i$startquan,(divide(i$allprod, i$t1))))
-}
 
 
-# for (x in 1: length(calib_data$allP)){
-#   for (y in calib_data$test1):
-#    if sq.item = sq.item.x
-#       item/item.x
-# 
-
-      # # For loop -- iterating thru starting quantity and reaction type to return cpD1 values
-      # for(i in 1:length(calib_df$starting_quantity)){
-      #   sq <- calib_df$starting_quantity[i]
-      #   if(i %% 6 == 1){
-      #     startq = c(startq,sq,sq,sq)
-      #   }
-      #   val <- toString(calib_df$reaction_type[i])
-      #   if(strcmp(val, "test1")){
-      #     test1 = c(test1, calib_df$cpD1[i])
-      #   }
-      #   if(strcmp(val, "all_products")){
-      #     allP = c(allP, calib_df$cpD1[i])
-      #   }
-      # }
-
-      
-      
 ### PLOTS for Presentation ###
 
 # Filter observatinos with unusual (~1.00) CP vals
