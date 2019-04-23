@@ -207,7 +207,7 @@ model = polr(as.factor(startqvalues) ~ calib.zscore, Hess = TRUE)
 summary(model)
 
 exp.zscore = (exp_data$ratio.exp - mean(exp_data$ratio.exp))/sd(exp_data$ratio.exp)
-polr.predict(model, exp.zscore, )
+basepredict.polr(model, exp.zscore, sim.count = 1000 )
 
 
 #Predict s.q. using ordinal logistic mode
