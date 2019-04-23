@@ -14,11 +14,11 @@ setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_11")
 #setwd("C:/Users/twili/Desktop/GIThub/StapletonLab/StressSplicing/qPCR")
 
 ### READ IN DERIVATIVE DATA ###
-# In the case of having two separate CSV files of calculated derivatives,
-# use this code to combine, prior to the following transpositions:
-#deriv.1<-read.csv(file = "2018_11_1_plate_qPCR_output.csv", header=FALSE)
-#deriv.2<-read.csv(file = "2018_11_2_plate_qPCR_output.csv", header=FALSE)
-#deriv=cbind(deriv.1, deriv.2)
+#In the case of having two separate CSV files of calculated derivatives,
+#use this code to combine, prior to the following transpositions:
+deriv.1<-read.csv(file = "2018_11_1_plate_qPCR_output.csv", header=FALSE)
+deriv.2<-read.csv(file = "2018_11_2_plate_qPCR_output.csv", header=FALSE)
+deriv=cbind(deriv.1, deriv.2)
 
 # In the case of having one CSV containing calculated derivatives, use this code:
 #deriv=read.csv(file = "(YEAR_MONTH_PLATE_qPCR_output.csv", header=FALSE)
@@ -86,6 +86,10 @@ calib_data = as.data.frame(cbind(startq, test1, allP))
 # Format starting quantity values as decimals, not scientific notation
 calib_data$startq=as.factor(format(calib_data$startq, scientific=FALSE))
 calib_data$startq=as.factor(calib_data$startq)
+
+
+#### Creating combination ratios within the calib data
+for ()
 ratio = calib_data$allP/calib_data$test1
 # Append ratios to data set
 calib_data = cbind(calib_data, ratio)

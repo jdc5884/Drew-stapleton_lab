@@ -161,39 +161,45 @@ exp_data = cbind(exp_data, ratio.exp)
 ### COMPLETED EXPERIMENTAL DATA FRAME ###
 
 
-########################################################## 
-################## Percentile Comparison# ################
-########################################################## 
-
+###############################################################
+# Percentile Comparison and Ordinal Logistin Regression Model #
+###############################################################
+install.packages("glm.predict")
 #Calculate z-score for calibrated data
 calib.zscore = (calib_data$ratio - mean(calib_data$ratio))/sd(calib_data$ratio)
 #Predict calibrated data ratios using experimental data
-y = zratio*sd(ratio.exp)+mean(ratio.exp)
+y = calib.zscore*sd(ratio.exp)+mean(ratio.exp)
 #Append y (predicted calibrated ratios) to calibrated data frame
 calib_data = cbind(calib_data, y)
 #Predict s.q. using ordinal logistic mode
+#startq~Zcalb
+#pred(model~zexp)
+### just using z scores to predict
+
+###### use the probability starting quantity matrix from the predict function
+#to find the weighted average 
+
+
+
 OLR.calib = polr(startq~y,data = calib_data, Hess = TRUE)
 summary(OLR.calib)
-prediction = as.data.frame(predict(OLR.calib, exp_data$ratio.exp))
+#predict the starting quantity using the experimental ratios
+prediction = predict(OLR.calib, exp_data$ratio.exp)
+#### above line produces 27 observations instead of needed 92 observations
+#### is the OLR trained on the original calib ratio or on the percentile-based ratio?
 
 
 
-########################################################## 
-##### Ordinal Logicistic Regression Calibrated Data ######
-##########################################################
-calib_data$startq = ordered(calib_data$startq, levels = levels(calib_data$startq))
-calib_data$ratio = allP/test1
-# Ordinal Logistic
-OLR = polr(startq~ratio,data = calib_data, Hess = TRUE)
-summary(OLR)
-(ctable <- coef(summary(OLR)))
-
-# Ordinal Logistic by Percentile
+#for each starting quantity find the median and set that as the new value
+#######################original OLR###########################
+# calib_data$startq = ordered(calib_data$startq, levels = levels(calib_data$startq))
+# calib_data$ratio = allP/test1
+# # Ordinal Logistic
 # OLR = polr(startq~ratio,data = calib_data, Hess = TRUE)
 # summary(OLR)
 # (ctable <- coef(summary(OLR)))
 
-### COMPLETED LOGISTIC REGRESSION ###
+exp_data$startq = prediction
 
 
 # ########################################################## 
