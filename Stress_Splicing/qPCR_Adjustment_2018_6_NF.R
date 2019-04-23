@@ -97,54 +97,6 @@ calib_data = cbind(calib_data, ratio)
 
 ### COMPLETED CALIBRATED DATA FRAME ###
 
-
-########################################################## 
-##### Ordinal Logicistic Regression Calibrated Data ######
-##########################################################
-calib_data$startq = ordered(calib_data$startq, levels = levels(calib_data$startq))
-calib_data$ratio = allP/test1
-# Ordinal Logistic
-OLR = polr(startq~ratio,data = calib_data, Hess = TRUE)
-summary(OLR)
-(ctable <- coef(summary(OLR)))
-
-# Ordinal Logistic by Percentile
-OLR = polr(startq~ratio,data = calib_data, Hess = TRUE)
-summary(OLR)
-(ctable <- coef(summary(OLR)))
-
-
-### COMPLETED LOGISTIC REGRESSION ###
-
-
-# ########################################################## 
-# ########### ADJUSTMENT MODEL - Calibrated Data ###########
-# ########################################################## 
-# 
-# Create empty vectors for for-loop input
-data = as.data.frame(calib_data)
-data$test1 = as.numeric(as.character(data$test1))
-data$allP = as.numeric(as.character(data$allP))
-adj_val = c()
-allP = c()
-startq = c()
-ratio =data$allP/data$test1
-# Itterating through each set of (3) observations performing U-Stats on each set of inputs
-for (i in 1:(nrow(data)/3)){
-  t_x <- c(data$allP[3*i - 2], data$allP[3*i - 1], data$allP[3*i])
-  t_y <- c(data$test1[3*i - 2], data$test1[3*i - 1], data$test1[3*i])
-  adj <- mean(outer(t_x, t_y, "-"))
-  adj_val <- c(adj_val, adj, adj, adj)
-}
-adjusted_test1 <- test1 + adj_val
-# Append adjusted test1 values and adjustment value to data set
-calib_data=cbind(data,adjusted_test1,adj_val)
-# Write Calibrated Data CSV --> Used in "qPCR_Plotting" code for visuals
-#write.csv(file="YEAR_MONTH_Calibrated_DF", calib_data)
-
-### COMPLETED ADJUSTMENT MODEL - CALIBRATED DATA ###
-
-
 ########################################################## 
 ################ Experimental Data Framing ###############
 ########################################################## 
@@ -208,6 +160,70 @@ exp_data = cbind(exp_data, ratio.exp)
 
 ### COMPLETED EXPERIMENTAL DATA FRAME ###
 
+
+########################################################## 
+################## Percentile Comparison# ################
+########################################################## 
+
+#Calculate z-score for calibrated data
+calib.zscore = (calib_data$ratio - mean(calib_data$ratio))/sd(calib_data$ratio)
+#Predict calibrated data ratios using experimental data
+y = zratio*sd(ratio.exp)+mean(ratio.exp)
+#Append y (predicted calibrated ratios) to calibrated data frame
+calib_data = cbind(calib_data, y)
+#Predict s.q. using ordinal logistic mode
+OLR.calib = polr(startq~y,data = calib_data, Hess = TRUE)
+summary(OLR.calib)
+prediction = as.data.frame(predict(OLR.calib, exp_data$ratio.exp))
+
+
+
+########################################################## 
+##### Ordinal Logicistic Regression Calibrated Data ######
+##########################################################
+calib_data$startq = ordered(calib_data$startq, levels = levels(calib_data$startq))
+calib_data$ratio = allP/test1
+# Ordinal Logistic
+OLR = polr(startq~ratio,data = calib_data, Hess = TRUE)
+summary(OLR)
+(ctable <- coef(summary(OLR)))
+
+# Ordinal Logistic by Percentile
+# OLR = polr(startq~ratio,data = calib_data, Hess = TRUE)
+# summary(OLR)
+# (ctable <- coef(summary(OLR)))
+
+### COMPLETED LOGISTIC REGRESSION ###
+
+
+# ########################################################## 
+# ########### ADJUSTMENT MODEL - Calibrated Data ###########
+# ########################################################## 
+# 
+# Create empty vectors for for-loop input
+data = as.data.frame(calib_data)
+data$test1 = as.numeric(as.character(data$test1))
+data$allP = as.numeric(as.character(data$allP))
+adj_val = c()
+allP = c()
+startq = c()
+ratio =data$allP/data$test1
+# Itterating through each set of (3) observations performing U-Stats on each set of inputs
+for (i in 1:(nrow(data)/3)){
+  t_x <- c(data$allP[3*i - 2], data$allP[3*i - 1], data$allP[3*i])
+  t_y <- c(data$test1[3*i - 2], data$test1[3*i - 1], data$test1[3*i])
+  adj <- mean(outer(t_x, t_y, "-"))
+  adj_val <- c(adj_val, adj, adj, adj)
+}
+adjusted_test1 <- test1 + adj_val
+# Append adjusted test1 values and adjustment value to data set
+calib_data=cbind(data,adjusted_test1,adj_val)
+# Write Calibrated Data CSV --> Used in "qPCR_Plotting" code for visuals
+#write.csv(file="YEAR_MONTH_Calibrated_DF", calib_data)
+
+### COMPLETED ADJUSTMENT MODEL - CALIBRATED DATA ###
+
+
 ########################################################## 
 #### PREDICT STARTING QUANTITIES - Experimental Data ####
 ########################################################## 
@@ -263,9 +279,14 @@ group = as.data.frame(split(dat, startquan))
 
 group0.01 = group[,c(1:3)]
 colnames(group0.01)=c("startquan", "allprod", "t1")
-#for (i in group0.01){
- # print(cbind(i$startquan,(divide(i$allprod, i$t1))))
-#}
+
+group0.01 = divide(group0.01$allprod, group0.01$t1)
+
+# for (i in group0.01){
+#  cbind(i$startquan,(divide(i$allprod, i$t1)))
+# }
+
+
 
 #group0.01 = group0.01 %>%
   # mutate(ratio1 = allprod[1,]/t1[i]) %>%
