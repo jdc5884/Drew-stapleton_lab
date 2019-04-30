@@ -236,7 +236,7 @@ summary(model)
 
 # Calculate experimental data z-score
 exp_data$exp.zscore = (exp_data$ratio.exp - mean(exp_data$ratio.exp))/sd(exp_data$ratio.exp)
-prob.matrix = predict(model, exp_data$exp.zscore, type='p')
+prob.matrix = predict(exp_data$exp.zscore, model, type='p')
 apply(prob.matrix, 1, function(x) x*calib_data$diff)
 exp_data$VQTL = colSums(apply(prob.matrix, 1, function(x) x*calib_data$diff))
 
