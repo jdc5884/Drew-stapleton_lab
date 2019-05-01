@@ -202,9 +202,9 @@ exp_data = exp_data %>% filter((exp_data$allP.exp < 2) == FALSE)
 ##########################################################
 
 # Calculate z-score for calibrated data
-calib.zscore = (calib_data$ratio - mean(calib_data$ratio))/sd(calib_data$ratio)
+zscore = (calib_data$ratio - mean(calib_data$ratio))/sd(calib_data$ratio)
 # Predict calibrated data ratios using experimental data
-pred.ratio = calib.zscore*sd(ratio.exp)+mean(ratio.exp)
+pred.ratio = zscore*sd(ratio.exp)+mean(ratio.exp)
 # Append y (predicted calibrated ratios) to calibrated data frame -- CALIBRATED RATIOS IN TERMS OF EXPERIMENTAL PARAMETERS
 calib_data = cbind(calib_data, pred.ratio) 
 # Create empty vectors for for-loop input
@@ -231,30 +231,48 @@ calib_data=cbind(calib_data,adjusted_test1,adj_val)
 calib_data$diff = calib_data$allP - calib_data$adjusted_test1
 
 # Ordinal Logistic Regression Model - starting quantity as response to calibrated z-score
-model = polr(as.factor(calib_data$startq) ~ calib.zscore, Hess = TRUE)
+model = polr(as.factor(calib_data$startq) ~ zscore, Hess = TRUE)
 summary(model)
 
 # Calculate experimental data z-score
-exp_data$exp.zscore = (exp_data$ratio.exp - mean(exp_data$ratio.exp))/sd(exp_data$ratio.exp)
-prob.matrix = predict(exp_data$exp.zscore, model, type='p')
+zscore = (exp_data$ratio.exp - mean(exp_data$ratio.exp))/sd(exp_data$ratio.exp)
+prob.matrix = predict(model, zscore, type='p')
 apply(prob.matrix, 1, function(x) x*calib_data$diff)
 exp_data$VQTL = colSums(apply(prob.matrix, 1, function(x) x*calib_data$diff))
 
 
-# Adjustment: allP - test1
-calib_data$diff = calib_data$allP - calib_data$adjusted_test1
+### PLOTS for Presentation ###
 
-calib_data = cbind(calib_data, calib.zscore)
-plot(as.factor(calib_data$startq), calib_data$calib.zscore)
 
-# Ordinal Logistic Regression Model - starting quantity as response to calibrated z-score
-model = polr(as.factor(startqvalues) ~ calib.zscore, Hess = TRUE)
-summary(model)
-# Calculate experimental data z-score
-exp_data$exp.zscore = (exp_data$ratio.exp - mean(exp_data$ratio.exp))/sd(exp_data$ratio.exp)
-prob.matrix = predict(model, exp.zscore) 
-apply(prob.matrix, 1, function(x) x*calib_data$diff)
-exp_data$VQTL = colSums(apply(prob.matrix, 1, function(x) x*calib_data$diff))
+# Boxplot comparing calib and exp ratios
+#boxplot(newratios.calib$combratio, exp_data_filtered$ratio.exp, ylab="Ratio", names=c("Calibrated", "Experimental"), main="Comparison of Ratios")
+
+# Calibrated data - s.q. vs. ratio
+#plot(as.factor(newratios.calib$startqvalues), newratios.calib$combratio, xlab='Starting Quantity', ylab='Ratio', 
+     #main='Calibrated Data - Starting Quantities vs. Ratios')
+
+
+
+
+
+
+###### OLD CODE #######
+
+
+# # Adjustment: allP - test1
+# calib_data$diff = calib_data$allP - calib_data$adjusted_test1
+# 
+# calib_data = cbind(calib_data, calib.zscore)
+# plot(as.factor(calib_data$startq), calib_data$calib.zscore)
+# 
+# # Ordinal Logistic Regression Model - starting quantity as response to calibrated z-score
+# model = polr(as.factor(startqvalues) ~ calib.zscore, Hess = TRUE)
+# summary(model)
+# # Calculate experimental data z-score
+# exp_data$exp.zscore = (exp_data$ratio.exp - mean(exp_data$ratio.exp))/sd(exp_data$ratio.exp)
+#prob.matrix = predict(model, exp_data$exp.zscore, type='p') 
+# apply(prob.matrix, 1, function(x) x*calib_data$diff)
+# exp_data$VQTL = colSums(apply(prob.matrix, 1, function(x) x*calib_data$diff))
 
 
 
@@ -265,24 +283,6 @@ exp_data$VQTL = colSums(apply(prob.matrix, 1, function(x) x*calib_data$diff))
 
 ###### use the probability starting quantity matrix from the predict function
 #to find the weighted average 
-
-
-
-
-### PLOTS for Presentation ###
-
-
-# Boxplot comparing calib and exp ratios
-boxplot(newratios.calib$combratio, exp_data_filtered$ratio.exp, ylab="Ratio", names=c("Calibrated", "Experimental"), main="Comparison of Ratios")
-
-# Calibrated data - s.q. vs. ratio
-plot(as.factor(newratios.calib$startqvalues), newratios.calib$combratio, xlab='Starting Quantity', ylab='Ratio', 
-     main='Calibrated Data - Starting Quantities vs. Ratios')
-
-
-
-###### OLD CODE #######
-
 
 # ########################################################## 
 # #### PREDICT STARTING QUANTITIES - Experimental Data ####
