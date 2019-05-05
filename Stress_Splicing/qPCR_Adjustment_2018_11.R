@@ -169,37 +169,35 @@ exp_data = cbind(exp_data, ratio.exp)
 ############### Combination Ratios for qPCR ##############
 ########################################################## 
 
-## NOT FOR USE IN CAPSTONE -- USE IN COMPARISON LATER ##
+startquan = as.character(calib_data$startq)
+allprod = calib_data$allP
+t1 = calib_data$test1
+dat = data.frame(cbind(startquan,allprod,t1), stringsAsFactors = FALSE)
 
-# startquan = as.character(calib_data$startq)
-# allprod = calib_data$allP
-# t1 = calib_data$test1
-# dat = data.frame(cbind(startquan,allprod,t1), stringsAsFactors = FALSE)
-# 
-# dat$allprod = as.numeric(dat$allprod)
-# dat$t1 = as.numeric(dat$t1)
-# 
-# #Create divide funtion - every element in column 1 divided by every element in column 2
-# divide <- function(col1, col2){
-#   ratio = NULL;
-#   for (i in col1){
-#     ratio = c(ratio,i/col2)
-#   }
-#   return(ratio)
-# }
-# #Subset data by starting quantity 
-# group = split.data.frame(dat, dat$startquan)
-# 
-# combratio = NULL;
-# for (k in group){
-#   combratio = c(combratio, divide(k$allprod, k$t1))
-# }
-# 
-# startqvalues = rep(unique(startquan), rep(9,9))
-# newratios.calib = data.frame(cbind(startqvalues, combratio), stringsAsFactors = FALSE)
-# newratios.calib$combratio = as.numeric(newratios.calib$combratio)
-# newratios.calib$startqvalues = as.numeric(newratios.calib$startqvalues)
-# #################### end combination ratios #####################
+dat$allprod = as.numeric(dat$allprod)
+dat$t1 = as.numeric(dat$t1)
+
+#Create divide funtion - every element in column 1 divided by every element in column 2
+divide <- function(col1, col2){
+  ratio = NULL;
+  for (i in col1){
+    ratio = c(ratio,i/col2)
+  }
+  return(ratio)
+}
+#Subset data by starting quantity
+group = split.data.frame(dat, dat$startquan)
+
+combratio = NULL;
+for (k in group){
+  combratio = c(combratio, divide(k$allprod, k$t1))
+}
+
+startqvalues = rep(unique(startquan), rep(9,9))
+newratios.calib = data.frame(cbind(startqvalues, combratio), stringsAsFactors = FALSE)
+newratios.calib$combratio = as.numeric(newratios.calib$combratio)
+newratios.calib$startqvalues = as.numeric(newratios.calib$startqvalues)
+#################### end combination ratios #####################
 
 ##########################################################
 ########## PROBABILITY MODEL - Calibrated Data ###########
@@ -234,6 +232,30 @@ calib_data=cbind(calib_data,adjusted_test1,adj_val)
 # Adjustment: allP - test1 -- USING IN MODEL TO MULTIPLY PROBABILITY MATRIX BY
 calib_data$diff = calib_data$allP - calib_data$adjusted_test1
 
+# CREATE DATA FRAME WITH ONLY S.Q. AND ADJUSTMENT VAL
+calib_adj = calib_data[,c(1,6)]
+
+average <- function(col1){
+  avg = NULL;
+  for (i in col1){
+    avg = c(avg,mean(col1))
+  }
+  return(avg)
+}
+#Subset data by starting quantity
+group = split.data.frame(calib_adj, calib_adj$startq)
+
+adj.test1.avg = NULL;
+for (k in group){
+  adj.test1.avg = c(adj.test1.avg, average(k$adjusted_test1))
+}
+print(adj.test1.avg)
+
+calib_adj = as.data.frame(unique(cbind(as.character(calib_data$startq), adj.test1.avg)))
+calib_adj$adj.test1.avg = as.numeric(as.character(calib_adj$adj.test1.avg))
+# Rename columns
+colnames(calib_adj)=c("startq", "adj.test1.avg")
+
 # Ordinal Logistic Regression Model - starting quantity as response to calibrated z-score
 model = polr(as.factor(calib_data$startq) ~ zscore, Hess = TRUE)
 summary(model)
@@ -241,9 +263,13 @@ summary(model)
 # Calculate experimental data z-score
 zscore = (exp_data$ratio.exp - mean(exp_data$ratio.exp))/sd(exp_data$ratio.exp)
 prob.matrix = predict(model, zscore, type='p')
-apply(prob.matrix, 1, function(x) x*calib_data$diff)
-exp_data$VQTL = colSums(apply(prob.matrix, 1, function(x) x*calib_data$diff))
 
+# 
+apply(prob.matrix, 1, function(x) x*calib_adj$adj.test1.avg)
+exp_data$exp.adjust = colSums(apply(prob.matrix, 1, function(x) x*calib_adj$adj.test1.avg))
+
+# Create new column with stress product (VQTL input)
+exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
 
 ### PLOTS for Presentation ###
 
@@ -252,13 +278,16 @@ exp_data$VQTL = colSums(apply(prob.matrix, 1, function(x) x*calib_data$diff))
 #boxplot(newratios.calib$combratio, exp_data_filtered$ratio.exp, ylab="Ratio", names=c("Calibrated", "Experimental"), main="Comparison of Ratios")
 
 # Calibrated data - s.q. vs. ratio
+#Plot for pairwise
 plot(as.factor(calib_data$startq), calib_data$ratio, xlab='Starting Quantity', ylab='Ratio', 
-     main='Calibrated Data - Starting Quantities vs. Ratios')
+     main='Calibrated Data - Starting Quantities vs. Pairwise Ratios')
+#Plot for non-pairwise
+plot(as.factor(newratios.calib$startqvalues), newratios.calib$combratio, xlab='Starting Quantity', ylab='Ratio', 
+     main='Calibrated Data - Starting Quantities vs. Non-Pairwise Ratios')
 
-
-
-
-
+#Boxplot of Stress Product
+boxplot(exp_data$stress, main='Box Plot of Stress Product', ylab='Stress Product')
+hist(exp_data$stress, xlab='Stress Product', main='Histogram of Stress Product', col='blue')
 
 ###### OLD CODE #######
 
