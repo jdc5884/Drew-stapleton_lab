@@ -122,9 +122,11 @@ exp_data = exp_data[order(exp_data$sampleID),]
 # Find counts of each unique sampleID; for sample with a count not equal to 2, remove from data frame
 counts = as.data.frame(table(exp_data$sampleID))
 countsne2 = as.data.frame(filter(counts, !counts$Freq==2))
-countsne2$Var1 = as.numeric(as.character(countsne2$Var1)) #---> CHECK IF THIS IS NECESSARY
+countsne2$Var1 = as.numeric(as.character(countsne2$Var1)) 
 # Remove invalid observations from data set
 exp_data = exp_data[!exp_data$sampleID %in% countsne2$Var1,]
+
+invalid_obs_2018_11 = 
 ### Report invalid observations ###
 # Send CSV of removed sampleID's to Dr. S (invalid obs), with additional plots of raw cycle values for invalid obs
 # Write CSV file to send Dr. S for investigation
