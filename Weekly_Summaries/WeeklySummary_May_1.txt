@@ -1,0 +1,23 @@
+Weekly Summaries - Last two weeks in April & First two weeks in May
+
+What I worked on the past weeks:
+- Finished details of using ordinal logistic regression model for experimental observations s.q. prediction
+- Explored and tested pairwise and non-pairwise ratio assumptions for use in OLRM
+- Implemented z-score comparison test as alternative, more accurate method to predict starting quantities in experimental observations 
+- Successfully completed the stress difference ratio for 11_2018, now ready for vQTL analysis
+- Updated model output, visualizations; Uploaded to OSF
+- Finished all Numpy tutorials (5 thru 14) in preparation for HSI
+- Completed Scikit Image tutorial on image segmentation and region properties in preparation for HSI
+- Created presentation and wrote documentation on adjustment model and OLRM methods for qPCR analysis. Usable as a reference/guide for RA's involved in qPCR later on
+
+
+What I will work in the next two weeks:
+- Use 2018_11 stress ratio output in vQTL analysis 
+- Run other month's plate data thru qPCR analysis to compute stress difference 
+--> For 2018_6, work with Julia to match odd sample ID numbers with correct (complete) sample IDs prior to input for vQTL analysis
+--> Compare model output between months to evaluate appropriateness 
+--> Verify effectiveness of non-pairwise assumption as opposed to pairwise
+- Add code for invalid observations to be written in a separate CSV file including CP values, match with Sample ID and plate identifiers
+- Look for places in code to improve efficiency and robustness 
+- Meet with David Ruddell for next steps in HSI project
+- Update all OSF files with new output 
