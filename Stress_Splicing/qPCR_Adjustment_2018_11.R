@@ -59,10 +59,10 @@ deriv['label.row'] = grepl('cpD1', deriv$cpD1)
 extra = which(deriv$label.row)
 deriv = deriv[-extra,]
 deriv = deriv[,-5]
-# Remove unusual observations from initial data frame
 deriv$cpD1 = as.numeric(as.character(deriv$cpD1))
-unusual = which(deriv$cpD1 < 10)
-unusual_obs_2018_11 = deriv[unusual,]
+# Remove unusual observations from initial data frame (CT value less than 10)
+unusual_obs_2018_8 = deriv %>% filter(deriv$cpD1 < 10)
+deriv = deriv %>% filter(deriv$cpD1 >= 10)
 # Frame raw plate data 
 raw_plate_data.1 = read.csv(file = "2018_11_1_plate.csv", header=FALSE)
 raw_plate_data.2 = read.csv(file = "2018_11_2_plate.csv", header=FALSE)
@@ -190,9 +190,6 @@ exp_data$allP.exp = as.numeric(as.character(exp_data$allP.exp))
 ratio.exp = exp_data$allP.exp/exp_data$test1.exp
 # Append ratios to data set
 exp_data = cbind(exp_data, ratio.exp)
-# Filter observatinos with unusual (~1.00) CP vals
-exp_data = exp_data %>% filter((exp_data$test1.exp < 2) == FALSE)
-exp_data = exp_data %>% filter((exp_data$allP.exp < 2) == FALSE)
 
 # Write Experimental Data CSV --> Used in "qPCR_Plotting" code for visuals
 #write.csv(file="YEAR_MONTH_Experimental_DF", exp_data)
