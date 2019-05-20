@@ -55,7 +55,17 @@ minus = which(deriv$sampleID_Minus)
 deriv = deriv[-minus,]
 deriv = deriv[,-5]
 
+# Filter observations with unusual CT values
+
+
+# # Filter observatinos with unusual (~1.00) CP vals
+# exp_data = exp_data %>% filter((exp_data$test1.exp < 2) == FALSE)
+# exp_data = exp_data %>% filter((exp_data$allP.exp < 2) == FALSE)
+
 ### COMPLETED INITIAL DATA FRAMING ###
+
+
+
 
 
 ########################################################## 

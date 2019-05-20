@@ -8,21 +8,27 @@ library(pracma)
 library(stringr)
 library(tidyverse)
 library(dplyr)
+library(MASS)
+library(glm.predict)
+library(compare)
+
 # Mac Directory
 setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_8")
 #setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_(MONTH)")
 # PC Directory
 #setwd(~/Desktop/GIThub/StapletonLab/StressSplicing/qPCR/)
 
+
 ### READ IN DERIVATIVE DATA###
 # In the case of having two separate CSV files of calculated derivatives,
 # use this code to combine, prior to the following transpositions:
-#deriv.1<-read.csv(file = "2018_11_1_plate_qPCR_output.csv", header=FALSE)
-#deriv.2<-read.csv(file = "2018_11_2_plate_qPCR_output.csv", header=FALSE)
-#deriv=cbind(deriv.1, deriv.2)
+deriv.1<-read.csv(file = "2018_8_1_plate_qPCR_output.csv", header=FALSE)
+deriv.2<-read.csv(file = "2018_08_02_plate_qPCR_output_2019_05_19.csv", header=FALSE)
+deriv.3=read.csv(file = "2018_08_03_plate_qPCR_output_2019_05_19.csv", header=FALSE)
+deriv=cbind(deriv.1, deriv.2, deriv.3)
 
 # In the case of having one CSV containing calculated derivatives, use this code:
-deriv=read.csv(file = "2018_8_1_plate_qPCR_output.csv", header=FALSE)
+#deriv=read.csv(file = "2018_8_1_plate_qPCR_output.csv", header=FALSE)
 
 ########################################################## 
 ################### Initial Data Framing #################
@@ -47,8 +53,19 @@ deriv['sampleID_Minus'] = grepl('minus', deriv$sampleID)
 # Remove 'Minus' values (include only gblock+ values), and indicator (T/F) column
 minus = which(deriv$sampleID_Minus)
 # IF "minus" RETURNS EMPTY VALUES, COMMENT OUT COMMAND BELOW
-#deriv = deriv[-minus,]
+deriv = deriv[-minus,]
 deriv = deriv[,-c(5)]
+# Remove two extra label rows from center of data frame
+deriv['label.row'] = grepl('cpD1', deriv$cpD1)
+extra = which(deriv$label.row)
+deriv = deriv[-extra,]
+deriv = deriv[,-5]
+deriv$cpD1 = as.numeric(as.character(deriv$cpD1))
+# Remove unusual observations from initial data frame (CT value less than 10)
+unusual_obs_2018_8 = deriv %>% filter(deriv$cpD1 < 10)
+deriv = deriv %>% filter(deriv$cpD1 >= 10)
+
+
 
 ### COMPLETED INITIAL DATA FRAMING ###
 
@@ -232,3 +249,53 @@ plot(calib_data$startq, calib_data$ratio, xlab='Starting Quantity', ylab='Ratio'
 #Calib Plot - Test1 vs. Ratio
 plot(calib_data$test1, calib_data$ratio, xlab='Test 1 Derivative', ylab='Ratio', 
       main='Calibrated Data - Test 1 Derivative vs. Ratio')
+
+
+#Compare sample ID's between plate and CT data sets
+#Confirm no obs deleted in calculations by checking dimensions
+#Delete NTC obs prior to comparison
+# plate1 = read.csv(file = "2018_8_1_plate.csv", header=FALSE)
+# plate1 = as.data.frame(t(plate1))
+# plate1 = plate1[-1,-5]
+# ct1 = read.csv(file = "2018_8_1_plate_qPCR_output.csv", header=FALSE)
+# ct1 = as.data.frame(t(ct1))
+# ct1 = ct1[-c(1,2),]
+# # Indicate if sample is NTC (negative control)
+# plate1['sampleID_NTC'] = grepl('NTC', plate1$V3)
+# ct1['sampleID_NTC'] = grepl('NTC', ct1$V3)
+# # Remove NTC samples, indicator (T/F) column, and cpD2 values
+# ntc_plate1 = which(plate1$sampleID_NTC)
+# ntc_ct1 = which(ct1$sampleID_NTC)
+# plate1 = plate1[-ntc_plate1,]
+# ct1 = ct1[-ntc_ct1,]
+# 
+# plate2 = read.csv(file = "2018_8_2_plate.csv", header=FALSE)
+# plate2 = as.data.frame(t(plate2))
+# plate2 = plate2[-1,-5]
+# ct2 = read.csv(file = "2018_08_02_plate_qPCR_output_2019_05_19.csv", header=FALSE)
+# ct2 = as.data.frame(t(ct2))
+# ct2 = ct2[-c(1,2),]
+# # Indicate if sample is NTC (negative control)
+# plate2['sampleID_NTC'] = grepl('NTC', plate2$V3)
+# ct2['sampleID_NTC'] = grepl('NTC', ct2$V3)
+# # Remove NTC samples, indicator (T/F) column, and cpD2 values
+# ntc_plate2 = which(plate2$sampleID_NTC)
+# ntc_ct2 = which(ct2$sampleID_NTC)
+# plate2 = plate2[-ntc_plate2,]
+# ct2 = ct2[-ntc_ct2,]
+# ###OBS SampleID 174 not included in qPCR output###
+# 
+# plate3 = read.csv(file = "2018_8_3_plate.csv", header=FALSE)
+# plate3 = as.data.frame(t(plate3))
+# plate3 = plate3[-1,-5]
+# ct3 = read.csv(file = "2018_08_03_plate_qPCR_output_2019_05_19.csv", header=FALSE)
+# ct3 = as.data.frame(t(ct3))
+# ct3 = ct3[-c(1,2),]
+# # Indicate if sample is NTC (negative control)
+# plate3['sampleID_NTC'] = grepl('NTC', plate3$V3)
+# ct3['sampleID_NTC'] = grepl('NTC', ct3$V3)
+# # Remove NTC samples, indicator (T/F) column, and cpD2 values
+# ntc_plate3 = which(plate3$sampleID_NTC)
+# ntc_ct3 = which(ct3$sampleID_NTC)
+# plate3 = plate3[-ntc_plate3,]
+# ct3 = ct3[-ntc_ct3,]

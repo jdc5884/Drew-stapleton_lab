@@ -159,6 +159,9 @@ exp_data$allP.exp = as.numeric(as.character(exp_data$allP.exp))
 ratio.exp = exp_data$allP.exp/exp_data$test1.exp
 # Append ratios to data set
 exp_data = cbind(exp_data, ratio.exp)
+# Filter observatinos with unusual (~1.00) CP vals
+exp_data = exp_data %>% filter((exp_data$test1.exp < 2) == FALSE)
+exp_data = exp_data %>% filter((exp_data$allP.exp < 2) == FALSE)
 
 # Write Experimental Data CSV --> Used in "qPCR_Plotting" code for visuals
 #write.csv(file="YEAR_MONTH_Experimental_DF", exp_data)
@@ -245,15 +248,13 @@ apply(prob.matrix, 1, function(x) x*calib_data$diff)
 exp_data$VQTL = colSums(apply(prob.matrix, 1, function(x) x*calib_data$diff))
 
 
-### PLOTS for Presentation ###
-
-
-# Boxplot comparing calib and exp ratios
-#boxplot(newratios.calib$combratio, exp_data_filtered$ratio.exp, ylab="Ratio", names=c("Calibrated", "Experimental"), main="Comparison of Ratios")
-
+###PLOTS###
 # Calibrated data - s.q. vs. ratio
 plot(as.factor(calib_data$startq), calib_data$ratio, xlab='Starting Quantity', ylab='Ratio', 
      main='Calibrated Data - Starting Quantities vs. Ratios')
+# Boxplot of Stress Product
+boxplot(exp_data$VQTL, main='Box Plot of Stress Product', ylab='Stress Product')
+hist(exp_data$VQTL, xlab='Stress Product', main='Histogram of Stress Product', col='blue')
 
 
 
