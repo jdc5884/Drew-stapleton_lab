@@ -25,37 +25,53 @@ setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_6")
 
 # In the case of having one CSV containing calculated derivatives, use this code:
 #deriv=read.csv(file = "(YEAR_MONTH_PLATE_qPCR_output.csv", header=FALSE)
-deriv=read.csv(file = "2018_06_01_plate_qPCR_output_2019_04_04.csv", header=FALSE)
+deriv_complete=read.csv(file = "2018_6_1_qPCR_Output.csv", header=FALSE)
 
 ########################################################## 
 ################### Initial Data Framing #################
 ########################################################## 
 
+deriv = deriv_complete
 # Remove extra labels row and column 
-deriv = deriv[-1,-1]
+deriv = deriv[,-1]
 # Transpose derivatives to be in equivalent format as raw plate data
 deriv = as.data.frame(t(deriv), header=TRUE)
 # Remove blank column (4th)
 #deriv = deriv[,-5]
 # Rename columns
-colnames(deriv)=c("reaction_type", "sampleID", "starting_quantity", "cpD1", "cpD2")
-# Remove extra labels row
-deriv=deriv[-1,]
+colnames(deriv)=c("plateID", "reaction_type", "sampleID", "starting_quantity", "cpD1", "cpD2")
 ### Removing NTC and gblock-Minus values ###
 # Indicate if sample is NTC (negative control)
 deriv['sampleID_NTC'] = grepl('NTC', deriv$sampleID)
 # Remove NTC samples, indicator (T/F) column, and cpD2 values
 ntc = which(deriv$sampleID_NTC)
 deriv = deriv[-ntc,]
-deriv = deriv[,-c(5,6)]
+deriv = deriv[,-c(6,7)]
 # Indicate if sample is 'Plus' or 'Minus'
 deriv['sampleID_Minus'] = grepl('minus', deriv$sampleID)
 # Remove 'Minus' values (include only gblock+ values), and indicator (T/F) column
 minus = which(deriv$sampleID_Minus)
 deriv = deriv[-minus,]
-deriv = deriv[,-5]
+deriv = deriv[,-6]
+deriv$cpD1 = as.numeric(as.character(deriv$cpD1))
 
 ### COMPLETED INITIAL DATA FRAMING ###
+
+########################################################## 
+############ Removing Ununsual Observations ##############
+##########################################################
+
+# Remove unusual observations from initial data frame (CT value less than 10)
+unusual_obs_2018_6 = deriv %>% filter(deriv$cpD1 < 10)
+deriv = deriv %>% filter(deriv$cpD1 >= 10)
+# ### WORK ON: Appending raw plate cycle vals to unusual obs d.f.
+# # Read in raw cycle data
+# cycle1 = read.csv(file = "2018_8_1_plate.csv", header = FALSE)
+# cycle2 = read.csv(file = "2018_8_2_plate.csv", header = FALSE)
+# cycle3 = read.csv(file = "2018_8_3_plate.csv", header = FALSE)
+# cycle = as.data.frame(cbind(cycle1, cycle2, cycle3))
+# unusual_obs_2018_8 = match()
+# ### COMPLETED UNUSUAL OBSERVATIONS REMOVAL/REPORTING ###
 
 
 ########################################################## 
@@ -153,17 +169,12 @@ exp_data$allP.exp = as.numeric(as.character(exp_data$allP.exp))
 ratio.exp = exp_data$allP.exp/exp_data$test1.exp
 # Append ratios to data set
 exp_data = cbind(exp_data, ratio.exp)
-# Filter observatinos with unusual (~1.00) CP vals
-exp_data = exp_data %>% filter((exp_data$test1.exp < 2) == FALSE)
-exp_data = exp_data %>% filter((exp_data$allP.exp < 2) == FALSE)
-# Write Experimental Data CSV --> Used in "qPCR_Plotting" code for visuals
-#write.csv(file="YEAR_MONTH_Experimental_DF", exp_data)
-
 ### COMPLETED EXPERIMENTAL DATA FRAME ###
 
-########################################################## 
+
+##########################################################
 ############### Combination Ratios for qPCR ##############
-########################################################## 
+##########################################################
 
 ## NOT FOR USE IN CAPSTONE -- USE IN COMPARISON LATER ##
 
@@ -171,10 +182,10 @@ exp_data = exp_data %>% filter((exp_data$allP.exp < 2) == FALSE)
 # allprod = calib_data$allP
 # t1 = calib_data$test1
 # dat = data.frame(cbind(startquan,allprod,t1), stringsAsFactors = FALSE)
-# 
+#
 # dat$allprod = as.numeric(dat$allprod)
 # dat$t1 = as.numeric(dat$t1)
-# 
+#
 # #Create divide funtion - every element in column 1 divided by every element in column 2
 # divide <- function(col1, col2){
 #   ratio = NULL;
@@ -183,14 +194,14 @@ exp_data = exp_data %>% filter((exp_data$allP.exp < 2) == FALSE)
 #   }
 #   return(ratio)
 # }
-# #Subset data by starting quantity 
+# #Subset data by starting quantity
 # group = split.data.frame(dat, dat$startquan)
-# 
+#
 # combratio = NULL;
 # for (k in group){
 #   combratio = c(combratio, divide(k$allprod, k$t1))
 # }
-# 
+#
 # startqvalues = rep(unique(startquan), rep(9,9))
 # newratios.calib = data.frame(cbind(startqvalues, combratio), stringsAsFactors = FALSE)
 # newratios.calib$combratio = as.numeric(newratios.calib$combratio)
@@ -230,6 +241,31 @@ calib_data=cbind(calib_data,adjusted_test1,adj_val)
 # Adjustment: allP - test1 -- Using in model to multiply probability matrix by
 calib_data$diff = calib_data$allP - calib_data$adjusted_test1
 
+# CREATE DATA FRAME WITH ONLY S.Q. AND ADJUSTMENT VAL
+calib_adj = calib_data[,c(1,6)]
+
+average <- function(col1){
+  avg = NULL;
+  for (i in col1){
+    avg = c(avg,mean(col1))
+  }
+  return(avg)
+}
+#Subset data by starting quantity
+group = split.data.frame(calib_adj, calib_adj$startq)
+
+adj.test1.avg = NULL;
+for (k in group){
+  adj.test1.avg = c(adj.test1.avg, average(k$adjusted_test1))
+}
+print(adj.test1.avg)
+
+calib_adj = as.data.frame(unique(cbind(as.character(calib_data$startq), adj.test1.avg)))
+calib_adj$adj.test1.avg = as.numeric(as.character(calib_adj$adj.test1.avg))
+# Rename columns
+colnames(calib_adj)=c("startq", "adj.test1.avg")
+
+
 # Ordinal Logistic Regression Model - starting quantity as response to calibrated z-score
 model = polr(as.factor(calib_data$startq) ~ zscore, Hess = TRUE)
 summary(model)
@@ -237,8 +273,16 @@ summary(model)
 # Calculate experimental data z-score
 zscore = (exp_data$ratio.exp - mean(exp_data$ratio.exp))/sd(exp_data$ratio.exp)
 prob.matrix = predict(model, zscore, type='p')
+
+##### WHICH APPLY IS USED?  TALK W JULIA #####
 apply(prob.matrix, 1, function(x) x*calib_data$diff)
-exp_data$VQTL = colSums(apply(prob.matrix, 1, function(x) x*calib_data$diff))
+apply(prob.matrix, 1, function(x) x*calib_adj$adj.test1.avg)
+exp_data$exp.adjust = colSums(apply(prob.matrix, 1, function(x) x*calib_adj$adj.test1.avg))
+
+# Create new column with stress product (VQTL input)
+exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
+
+# exp_data$VQTL = colSums(apply(prob.matrix, 1, function(x) x*calib_data$diff))
 
 
 ###PLOTS###
