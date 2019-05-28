@@ -39,8 +39,6 @@ deriv = deriv[,-1]
 deriv = as.data.frame(t(deriv), header=TRUE)
 # Rename columns
 colnames(deriv)=c("plateID", "reaction_type", "sampleID", "starting_quantity", "cpD1", "cpD2")
-# Remove extra labels row
-#deriv=deriv[-1,]
 # Indicate if sample is NTC (negative control)
 deriv['sampleID_NTC'] = grepl('NTC', deriv$sampleID)
 # Remove NTC samples, indicator (T/F) column, and cpD2 values
@@ -128,9 +126,9 @@ calib_data = cbind(calib_data, ratio)
 exp_data = deriv %>% filter(str_detect(sampleID, "g")==FALSE)
 # Sort by starting quantity
 exp_data = exp_data[order(exp_data$starting_quantity),]
-# Remove first and last rows (unnecessary labeling)
-exp_data = exp_data[-1,]
-exp_data = exp_data[-nrow(exp_data),]
+# # Remove first and last rows (unnecessary labeling)
+# exp_data = exp_data[-1,]
+# exp_data = exp_data[-nrow(exp_data),]
 exp_data$cpD1 = as.numeric(as.character(exp_data$cpD1))
 # Order data by sampleID
 exp_data = exp_data[order(exp_data$sampleID),]
@@ -139,6 +137,7 @@ exp_data = exp_data[order(exp_data$sampleID),]
 counts = as.data.frame(table(exp_data$sampleID))
 countsne2 = as.data.frame(filter(counts, !counts$Freq==2))
 countsne2$Var1 = as.numeric(as.character(countsne2$Var1)) 
+# Remove observations with count not equal to 2 from data set
 exp_data = exp_data[!exp_data$sampleID %in% countsne2$Var1,]
 # Create empty vectors for for-loop to input cpD1 values
 test1.exp = c()
@@ -195,7 +194,7 @@ for (k in group){
   combratio = cbind(combratio, divide(k$allprod, k$t1))
 }
 # Create data frame with unique ratios at each starting quantity
-#startqvalues = rep(unique(startquan), rep(length(unique(startquan)),length(unique(startquan)))) 
+startqvalues = rep(unique(startquan), rep(length(unique(startquan)),length(unique(startquan)))) 
 newratios.calib = data.frame(rbind(unique(startqvalues), combratio), stringsAsFactors = FALSE)
 newratios.calib = t(newratios.calib)
 newratios.calib = as.data.frame(newratios.calib)

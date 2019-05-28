@@ -32,10 +32,10 @@ deriv_complete=read.csv(file = "2018_6_1_qPCR_Output.csv", header=FALSE)
 ########################################################## 
 
 deriv = deriv_complete
-# Remove extra labels row and column 
+# Remove extra labels column 
 deriv = deriv[,-1]
 # Transpose derivatives to be in equivalent format as raw plate data
-deriv = as.data.frame(t(deriv), header=TRUE)
+deriv = as.data.frame(t(deriv), header=FALSE)
 # Remove blank column (4th)
 #deriv = deriv[,-5]
 # Rename columns
@@ -107,7 +107,7 @@ calib_data = as.data.frame(cbind(startq, test1, allP))
 # Format starting quantity values as decimals, not scientific notation
 calib_data$startq=as.factor(format(calib_data$startq, scientific=FALSE))
 calib_data$startq=as.factor(calib_data$startq)
-# Calculate ratio of allP/test1 --> PAIRWISE RATIOS -- INPUT FOR OLR MODEL
+# Calculate ratio of allP/test1 
 ratio = calib_data$allP/calib_data$test1
 # Append ratios to data set
 calib_data = cbind(calib_data, ratio)
@@ -123,8 +123,8 @@ exp_data = deriv %>% filter(str_detect(sampleID, "g")==FALSE)
 # Sort by starting quantity
 exp_data = exp_data[order(exp_data$starting_quantity),]
 # Remove first and last rows (unnecessary labeling)
-exp_data = exp_data[-1,]
-exp_data = exp_data[-nrow(exp_data),]
+# exp_data = exp_data[-1,]
+# exp_data = exp_data[-nrow(exp_data),]
 exp_data$cpD1 = as.numeric(as.character(exp_data$cpD1))
 # Order data by sampleID
 exp_data = exp_data[order(exp_data$sampleID),]
@@ -132,7 +132,6 @@ exp_data = exp_data[order(exp_data$sampleID),]
 # Find counts of each unique sampleID; for sample with a count not equal to 2, remove from data frame
 counts = as.data.frame(table(exp_data$sampleID))
 countsne2 = as.data.frame(filter(counts, !counts$Freq==2))
-countsne2$Var1 = as.numeric(as.character(countsne2$Var1)) #---> CHECK IF THIS IS NECESSARY
 # Remove invalid observations from data set
 exp_data = exp_data[!exp_data$sampleID %in% countsne2$Var1,]
 ### Report invalid observations ###
@@ -178,35 +177,37 @@ exp_data = cbind(exp_data, ratio.exp)
 
 ## NOT FOR USE IN CAPSTONE -- USE IN COMPARISON LATER ##
 
-# startquan = as.character(calib_data$startq)
-# allprod = calib_data$allP
-# t1 = calib_data$test1
-# dat = data.frame(cbind(startquan,allprod,t1), stringsAsFactors = FALSE)
-#
-# dat$allprod = as.numeric(dat$allprod)
-# dat$t1 = as.numeric(dat$t1)
-#
-# #Create divide funtion - every element in column 1 divided by every element in column 2
-# divide <- function(col1, col2){
-#   ratio = NULL;
-#   for (i in col1){
-#     ratio = c(ratio,i/col2)
-#   }
-#   return(ratio)
-# }
-# #Subset data by starting quantity
-# group = split.data.frame(dat, dat$startquan)
-#
-# combratio = NULL;
-# for (k in group){
-#   combratio = c(combratio, divide(k$allprod, k$t1))
-# }
-#
-# startqvalues = rep(unique(startquan), rep(9,9))
-# newratios.calib = data.frame(cbind(startqvalues, combratio), stringsAsFactors = FALSE)
-# newratios.calib$combratio = as.numeric(newratios.calib$combratio)
-# newratios.calib$startqvalues = as.numeric(newratios.calib$startqvalues)
-# #################### end combination ratios #####################
+startquan = as.character(calib_data$startq)
+allprod = calib_data$allP
+t1 = calib_data$test1
+dat = data.frame(cbind(startquan,allprod,t1), stringsAsFactors = FALSE)
+
+dat$allprod = as.numeric(dat$allprod)
+dat$t1 = as.numeric(dat$t1)
+
+#Create divide funtion - every element in column 1 divided by every element in column 2
+divide <- function(col1, col2){
+ ratio = NULL;
+ for (i in col1){
+   ratio = c(ratio,i/col2)
+ }
+ return(ratio)
+}
+#Subset data by starting quantity
+group = split.data.frame(dat, dat$startquan)
+# Calculate combination ratios at each starting quantity
+combratio = NULL;
+for (k in group){
+  combratio = cbind(combratio, divide(k$allprod, k$t1))
+}
+# Create data frame with unique ratios at each starting quantity
+startqvalues = rep(unique(startquan), rep(length(unique(startquan)),length(unique(startquan)))) 
+newratios.calib = data.frame(rbind(unique(startqvalues), combratio), stringsAsFactors = FALSE)
+newratios.calib = t(newratios.calib)
+newratios.calib = as.data.frame(newratios.calib)
+newratios.calib$combratio = as.numeric(newratios.calib$combratio)
+newratios.calib$startqvalues = as.numeric(newratios.calib$startqvalues)
+#################### end combination ratios #####################
 
 ##########################################################
 ########## PROBABILITY MODEL - Calibrated Data ###########
@@ -281,8 +282,6 @@ exp_data$exp.adjust = colSums(apply(prob.matrix, 1, function(x) x*calib_adj$adj.
 
 # Create new column with stress product (VQTL input)
 exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
-
-# exp_data$VQTL = colSums(apply(prob.matrix, 1, function(x) x*calib_data$diff))
 
 
 ###PLOTS###
