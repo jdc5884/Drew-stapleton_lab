@@ -207,6 +207,17 @@ newratios.calib = t(newratios.calib)
 newratios.calib = as.data.frame(newratios.calib)
 newratios.calib$combratio = as.numeric(newratios.calib$combratio)
 newratios.calib$startqvalues = as.numeric(newratios.calib$startqvalues)
+# Duplicate newratios.calib data frame, transpose for boxplot visualizations at each s.q.
+newratios.calib.boxplot = as.data.frame(t(newratios.calib))
+colnames(newratios.calib.boxplot) = c("0.01", "0.05", "0.10", "0.50", "1.00", "50.00")
+newratios.calib.boxplot = newratios.calib.boxplot[-1,]
+
+
+
+#newratios.calib.boxplot = data.frame(newratios.calib.boxplot)
+# Add row of repeating s.q.'s 
+
+
 #################### end combination ratios #####################
 
 ##########################################################
@@ -275,8 +286,7 @@ summary(model)
 zscore = (exp_data$ratio.exp - mean(exp_data$ratio.exp))/sd(exp_data$ratio.exp)
 prob.matrix = predict(model, zscore, type='p')
 
-##### WHICH APPLY IS USED?  TALK W JULIA #####
-apply(prob.matrix, 1, function(x) x*calib_data$diff)
+# Apply probability matrix to the adjusted test 1 averages
 apply(prob.matrix, 1, function(x) x*calib_adj$adj.test1.avg)
 exp_data$exp.adjust = colSums(apply(prob.matrix, 1, function(x) x*calib_adj$adj.test1.avg))
 
@@ -286,13 +296,10 @@ exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
 
 ###PLOTS###
 # Calibrated data - s.q. vs. ratio
-plot(as.factor(calib_data$startq), calib_data$ratio, xlab='Starting Quantity', ylab='Ratio', 
+plot(as.factor(calib_adj$startq), newratios.calib.boxplot, xlab='Starting Quantity', ylab='Ratio', 
      main='Calibrated Data - Starting Quantities vs. Ratios')
-# Boxplot of Stress Product
-boxplot(exp_data$VQTL, main='Box Plot of Stress Product', ylab='Stress Product')
-hist(exp_data$VQTL, xlab='Stress Product', main='Histogram of Stress Product', col='blue')
 
-
+?plot
 
 ###### OLD CODE #######
 

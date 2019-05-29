@@ -267,34 +267,31 @@ summary(model)
 zscore = (exp_data$ratio.exp - mean(exp_data$ratio.exp))/sd(exp_data$ratio.exp)
 prob.matrix = predict(model, zscore, type='p')
 
-# 
+# Apply probability matrix to the adjusted test 1 averages
 apply(prob.matrix, 1, function(x) x*calib_adj$adj.test1.avg)
 exp_data$exp.adjust = colSums(apply(prob.matrix, 1, function(x) x*calib_adj$adj.test1.avg))
 
 # Create new column with stress product (VQTL input)
 exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
 
+
 ###PLOTS###
 # Calibrated data - s.q. vs. ratio
-plot(as.factor(calib_data$startq), calib_data$ratio, xlab='Starting Quantity', ylab='Ratio', 
+plot(as.factor(calib_data$startq), calib_data$, xlab='Starting Quantity', ylab='Ratio', 
      main='Calibrated Data - Starting Quantities vs. Ratios')
-# Boxplot of Stress Product
-boxplot(exp_data$VQTL, main='Box Plot of Stress Product', ylab='Stress Product')
-hist(exp_data$VQTL, xlab='Stress Product', main='Histogram of Stress Product', col='blue')
 
-
-##PLOTS##
-# Calibrated data - s.q. vs. ratio
-#Plot for pairwise
-plot(as.factor(calib_data$startq), calib_data$ratio, xlab='Starting Quantity', ylab='Ratio', 
-     main='Calibrated Data - Starting Quantities vs. Pairwise Ratios')
-#Plot for non-pairwise
-plot(as.factor(newratios.calib$startqvalues), newratios.calib$combratio, xlab='Starting Quantity', ylab='Ratio', 
-     main='Calibrated Data - Starting Quantities vs. Non-Pairwise Ratios')
-
-#Boxplot of Stress Product
-boxplot(exp_data$stress, main='Box Plot of Stress Product', ylab='Stress Product')
-hist(exp_data$stress, xlab='Stress Product', main='Histogram of Stress Product', col='blue')
+# ##PLOTS##
+# # Calibrated data - s.q. vs. ratio
+# #Plot for pairwise
+# plot(as.factor(calib_data$startq), calib_data$ratio, xlab='Starting Quantity', ylab='Ratio', 
+#      main='Calibrated Data - Starting Quantities vs. Pairwise Ratios')
+# #Plot for non-pairwise
+# plot(as.factor(newratios.calib$startqvalues), newratios.calib$combratio, xlab='Starting Quantity', ylab='Ratio', 
+#      main='Calibrated Data - Starting Quantities vs. Non-Pairwise Ratios')
+# 
+# #Boxplot of Stress Product
+# boxplot(exp_data$stress, main='Box Plot of Stress Product', ylab='Stress Product')
+# hist(exp_data$stress, xlab='Stress Product', main='Histogram of Stress Product', col='blue')
 
 
 
