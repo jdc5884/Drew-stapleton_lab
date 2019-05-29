@@ -273,6 +273,8 @@ exp_data$exp.adjust = colSums(apply(prob.matrix, 1, function(x) x*calib_adj$adj.
 # Create new column with stress product (VQTL input)
 exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
 
+write.csv(file="C:/Users/twili/Desktop/GIThub/Andrew/stapleton_Lab/Stress_Splicing/2018_11/2018_11_withStress.csv", exp_data)
+
 ### PLOTS for Presentation ###
 
 
