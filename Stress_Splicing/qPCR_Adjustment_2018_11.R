@@ -311,7 +311,7 @@ exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
 # Calibrated data - s.q. vs. ratio
 plot(newratios.calib.boxplot$startqvector, as.numeric(newratios.calib.boxplot$newratiosvector), xlab='Starting Quantity', ylab='Ratio', 
      main='2018_11 Calibrated Data - Starting Quantities vs. Ratios')
-
+s
 
 #Compare sample ID's between plate and CT data sets
 #Confirm no obs deleted in calculations by checking dimensions
