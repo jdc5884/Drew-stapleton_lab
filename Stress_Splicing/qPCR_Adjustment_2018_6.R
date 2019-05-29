@@ -294,7 +294,7 @@ exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
 ###PLOTS###
 # Calibrated data - s.q. vs. ratio
 plot(newratios.calib.boxplot$startqvector, as.numeric(newratios.calib.boxplot$newratiosvector), xlab='Starting Quantity', ylab='Ratio', 
-     main='Calibrated Data - Starting Quantities vs. Ratios')
+     main='2018_6 Calibrated Data - Starting Quantities vs. Ratios')
 
 
 ###### OLD CODE #######
