@@ -295,6 +295,35 @@ exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
 # Calibrated data - s.q. vs. ratio
 plot(newratios.calib.boxplot$startqvector, as.numeric(newratios.calib.boxplot$newratiosvector), xlab='Starting Quantity', ylab='Ratio', 
      main='2018_6 Calibrated Data - Starting Quantities vs. Ratios')
+# Histogram - calib allP vs. exp allP
+hist(calib_data$allP, xlim=c(0,40), ylim=c(0,100), col=rgb(1,0,0,0.5), main='2018_6 Histogram of All Products', xlab='All Products Derivative')
+hist(exp_data$allP.exp, xlim=c(0,40), ylim=c(0,100), add=T, col=rgb(0,0,1,0.5))
+legend("topleft",
+       c("Calibration", "Experimental"),
+       fill=c(rgb(1,0,0,0.5), rgb(0,0,1,0.5)), bty="n")
+#dev.off()
+# Histogram - calib test1 vs. exp test1
+hist(calib_data$test1, xlim=c(0,30), ylim=c(0,30), col=rgb(1,0,0,0.5), main='2018_6 Histogram of Test 1', xlab='Test 1 Derivative')
+hist(exp_data$test1.exp, xlim=c(0,30), ylim=c(0,30), add=T, col=rgb(0,0,1,0.5))
+legend("topleft",
+       c("Calibration", "Experimental"),
+       fill=c(rgb(1,0,0,0.5), rgb(0,0,1,0.5)), bty="n")
+dev.off()
+
+
+###UPDATE NONPAIRWISE RATIO PLOTS###
+#Ratios - Calibrated#
+hist(newratios.calib$combratio, xlim=c(0,3), ylim=c(0,70), col=rgb(1,0,0,0.5), main='Histogram of Non-Pairwise Ratios', xlab='Ratio')
+#Ratios - Experimental#
+# Values excluded from histogram that will be further investigated later (their index)
+x=c(8,82,141,148,149,153,161,170,172,175,180,188)
+exp_data2=exp_data[-x,]
+hist(exp_data2$ratio.exp, xlim=c(0,3), ylim=c(0,70), col=rgb(0,0,1,0.5), add=T)
+legend("topleft",
+       c("Calibration", "Experimental"),
+       fill=c(rgb(1,0,0,0.5), rgb(0,0,1,0.5)), bty="n")
+
+
 
 
 ###### OLD CODE #######

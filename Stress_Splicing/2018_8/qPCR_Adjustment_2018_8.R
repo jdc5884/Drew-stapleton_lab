@@ -286,8 +286,23 @@ exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
 # Calibrated data - s.q. vs. ratio
 plot(newratios.calib.boxplot$startqvector, as.numeric(newratios.calib.boxplot$newratiosvector), xlab='Starting Quantity', ylab='Ratio', 
      main='2018_8 Calibrated Data - Starting Quantities vs. Ratios')
+# Histogram - calib allP vs. exp allP
+hist(calib_data$allP, xlim=c(0,40), ylim=c(0,110), col=rgb(1,0,0,0.5), main='2018_8 Histogram of All Products', xlab='All Products Derivative')
+hist(exp_data$allP.exp, xlim=c(0,40), ylim=c(0,110), add=T, col=rgb(0,0,1,0.5))
+legend("topleft",
+       c("Calibration", "Experimental"),
+       fill=c(rgb(1,0,0,0.5), rgb(0,0,1,0.5)), bty="n")
+#dev.off()
+# Histogram - calib test1 vs. exp test1
+hist(calib_data$test1, xlim=c(0,30), ylim=c(0,160), col=rgb(1,0,0,0.5), main='2018_8 Histogram of Test 1', xlab='Test 1 Derivative')
+hist(exp_data$test1.exp, xlim=c(0,30), ylim=c(0,160), add=T, col=rgb(0,0,1,0.5))
+legend("topleft",
+       c("Calibration", "Experimental"),
+       fill=c(rgb(1,0,0,0.5), rgb(0,0,1,0.5)), bty="n")
+dev.off()
 
-# ##PLOTS##
+
+###UPDATE NONPAIRWISE RATIO PLOTS###
 # # Calibrated data - s.q. vs. ratio
 # #Plot for pairwise
 # plot(as.factor(calib_data$startq), calib_data$ratio, xlab='Starting Quantity', ylab='Ratio', 
