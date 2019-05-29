@@ -224,6 +224,14 @@ newratios.calib = t(newratios.calib)
 newratios.calib = as.data.frame(newratios.calib)
 newratios.calib$combratio = as.numeric(newratios.calib$combratio)
 newratios.calib$startqvalues = as.numeric(newratios.calib$startqvalues)
+# Duplicate newratios.calib data frame, transpose for boxplot visualizations at each s.q.
+newratios.calib.boxplot = as.data.frame(t(newratios.calib))
+colnames(newratios.calib.boxplot) = c("0.01", "0.05", "0.10", "0.50", "1.00", "50.00")
+newratios.calib.boxplot = newratios.calib.boxplot[-1,]
+newratiosvector = as.vector(as.matrix.data.frame(newratios.calib.boxplot))
+startqvector = sort(rep(unique(startquan), length(newratios.calib.boxplot$`0.01`)))
+newratios.calib.boxplot = as.data.frame(cbind(newratiosvector, startqvector))
+
 ### COMPLETED COMBINATION RATIOS ###
 
 ##########################################################
@@ -301,11 +309,8 @@ exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
 
 ###PLOTS###
 # Calibrated data - s.q. vs. ratio
-plot(as.factor(calib_data$startq), calib_data$ratio, xlab='Starting Quantity', ylab='Ratio', 
+plot(newratios.calib.boxplot$startqvector, as.numeric(newratios.calib.boxplot$newratiosvector), xlab='Starting Quantity', ylab='Ratio', 
      main='Calibrated Data - Starting Quantities vs. Ratios')
-# Boxplot of Stress Product
-boxplot(exp_data$VQTL, main='Box Plot of Stress Product', ylab='Stress Product')
-hist(exp_data$VQTL, xlab='Stress Product', main='Histogram of Stress Product', col='blue')
 
 
 #Compare sample ID's between plate and CT data sets

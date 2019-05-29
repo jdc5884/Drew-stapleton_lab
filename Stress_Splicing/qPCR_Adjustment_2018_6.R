@@ -211,12 +211,9 @@ newratios.calib$startqvalues = as.numeric(newratios.calib$startqvalues)
 newratios.calib.boxplot = as.data.frame(t(newratios.calib))
 colnames(newratios.calib.boxplot) = c("0.01", "0.05", "0.10", "0.50", "1.00", "50.00")
 newratios.calib.boxplot = newratios.calib.boxplot[-1,]
-
-
-
-#newratios.calib.boxplot = data.frame(newratios.calib.boxplot)
-# Add row of repeating s.q.'s 
-
+newratiosvector = as.vector(as.matrix.data.frame(newratios.calib.boxplot))
+startqvector = sort(rep(unique(startquan), length(newratios.calib.boxplot$`0.01`)))
+newratios.calib.boxplot = as.data.frame(cbind(newratiosvector, startqvector))
 
 #################### end combination ratios #####################
 
@@ -296,10 +293,9 @@ exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
 
 ###PLOTS###
 # Calibrated data - s.q. vs. ratio
-plot(as.factor(calib_adj$startq), newratios.calib.boxplot, xlab='Starting Quantity', ylab='Ratio', 
+plot(newratios.calib.boxplot$startqvector, as.numeric(newratios.calib.boxplot$newratiosvector), xlab='Starting Quantity', ylab='Ratio', 
      main='Calibrated Data - Starting Quantities vs. Ratios')
 
-?plot
 
 ###### OLD CODE #######
 
