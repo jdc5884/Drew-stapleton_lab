@@ -9,24 +9,24 @@ library(tidyverse)
 library(dplyr)
 library(MASS)
 library(glm.predict)
-library(compare)
 
 # Mac Directory
-setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_11")
+setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_8")
 #setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_(MONTH)")
 # PC Directory
-#setwd("C:/Users/twili/Desktop/GIThub/StapletonLab/StressSplicing/qPCR")
+#setwd(~/Desktop/GIThub/StapletonLab/StressSplicing/qPCR/)
 
-### READ IN DERIVATIVE DATA ###
+### READ IN DERIVATIVE DATA###
 # In the case of having two separate CSV files of calculated derivatives,
 # use this code to combine, prior to the following transpositions:
-deriv.1<-read.csv(file = "2018_11_1_qPCR_Output.csv", header=FALSE)
-deriv.2<-read.csv(file = "2018_11_2_qPCR_Output.csv", header=FALSE)
-deriv_complete=as.data.frame(cbind(deriv.1, deriv.2))
+deriv.1<-read.csv(file = "2018_8_1_qPCR_Output.csv", header=FALSE)
+deriv.2<-read.csv(file = "2018_8_2_qPCR_Output.csv", header=FALSE)
+deriv.3=read.csv(file = "2018_8_3_qPCR_Output.csv", header=FALSE)
+deriv_complete=as.data.frame(cbind(deriv.1, deriv.2, deriv.3))
 
 # In the case of having one CSV containing calculated derivatives, use this code:
-#deriv=read.csv(file = "(YEAR_MONTH_PLATE_qPCR_output.csv", header=FALSE)
-#deriv=read.csv(file = "2018_06_01_plate_qPCR_output_2019_04_04.csv", header=FALSE)
+#deriv=read.csv(file = "2018_8_1_plate_qPCR_output.csv", header=FALSE)
+
 
 ########################################################## 
 ################### Initial Data Framing #################
@@ -39,7 +39,6 @@ deriv = deriv[,-1]
 deriv = as.data.frame(t(deriv), header=TRUE)
 # Rename columns
 colnames(deriv)=c("plateID", "reaction_type", "sampleID", "starting_quantity", "cpD1", "cpD2")
-### Removing NTC and gblock-Minus values ###
 # Indicate if sample is NTC (negative control)
 deriv['sampleID_NTC'] = grepl('NTC', deriv$sampleID)
 # Remove NTC samples, indicator (T/F) column, and cpD2 values
@@ -66,30 +65,10 @@ deriv$cpD1 = as.numeric(as.character(deriv$cpD1))
 ############ Removing Ununsual Observations ##############
 ##########################################################
 
-## CODE WORKING ON WITH DAVID ##
-# # Remove unusual observations from initial data frame (CT value less than 10)
+# Remove unusual observations from initial data frame (CT value less than 10)
 unusual_obs_2018_8 = deriv %>% filter(deriv$cpD1 < 10)
 deriv = deriv %>% filter(deriv$cpD1 >= 10)
-# # ### WORK ON: Appending raw plate cycle vals to unusual obs d.f.
-# # Frame raw plate data 
-# raw_plate_data.1 = read.csv(file = "2018_11_1_plate.csv", header=FALSE)
-# raw_plate_data.2 = read.csv(file = "2018_11_2_plate.csv", header=FALSE)
-# raw_plate_data = cbind(raw_plate_data.1, raw_plate_data.2)
-# 
-# comparison <- compare(raw_plate_data,deriv,allowAll=TRUE)
-# 
-# # Remove extra labels row and column 
-# raw_plate_data = raw_plate_data[-1,-1]
-# # Transpose derivatives to be in equivalent format as raw plate data
-# raw_plate_data = as.data.frame(t(raw_plate_data), header=TRUE)
-# raw_plate_data = raw_plate_data[-ntc,]
-# raw_plate_data = raw_plate_data[-minus,]
-# raw_plate_data = raw_plate_data[-extra,]
-# raw_plate_data = raw_plate_data[,-c(4,5)]
-# # Remove normal observations  
-# raw_plate_data = raw_plate_data[unusual,] 
-
-## ALTERNATE CODE ##
+# ### WORK ON: Appending raw plate cycle vals to unusual obs d.f.
 # # Read in raw cycle data
 # cycle1 = read.csv(file = "2018_8_1_plate.csv", header = FALSE)
 # cycle2 = read.csv(file = "2018_8_2_plate.csv", header = FALSE)
@@ -130,14 +109,14 @@ for(i in 1:length(calib_data$starting_quantity)){
 # Bind test1 and allProd cpD1 values by starting quantity
 calib_data = as.data.frame(cbind(startq, test1, allP))
 # Format starting quantity values as decimals, not scientific notation
-calib_data$startq=as.factor(format(calib_data$startq, scientific=FALSE))
-calib_data$startq=as.factor(calib_data$startq)
+calib_data$startq = as.factor(format(calib_data$startq, scientific=FALSE))
+calib_data$startq = as.factor(calib_data$startq)
 # Calculate ratio of allP/test1 --> PAIRWISE RATIOS -- INPUT FOR OLR MODEL
 ratio = calib_data$allP/calib_data$test1
 # Append ratios to data set
 calib_data = cbind(calib_data, ratio)
-
 ### COMPLETED CALIBRATED DATA FRAME ###
+
 
 ########################################################## 
 ############### Experimental Data Framing ################
@@ -147,14 +126,14 @@ calib_data = cbind(calib_data, ratio)
 exp_data = deriv %>% filter(str_detect(sampleID, "g")==FALSE)
 # Sort by starting quantity
 exp_data = exp_data[order(exp_data$starting_quantity),]
-# Remove first and last rows (unnecessary labeling)
-exp_data = exp_data[-1,]
-exp_data = exp_data[-nrow(exp_data),]
+# # Remove first and last rows (unnecessary labeling)
+# exp_data = exp_data[-1,]
+# exp_data = exp_data[-nrow(exp_data),]
 exp_data$cpD1 = as.numeric(as.character(exp_data$cpD1))
 # Order data by sampleID
 exp_data = exp_data[order(exp_data$sampleID),]
 ### Finding invalid observations ###
-# Find counts of each unique sampleID; for sample with a count not equal to 2, remove from data frame
+# Find invalid observations - Find counts of each unique sampleID; remove ones with count not equal to 2 from data frame
 counts = as.data.frame(table(exp_data$sampleID))
 countsne2 = as.data.frame(filter(counts, !counts$Freq==2))
 countsne2$Var1 = as.numeric(as.character(countsne2$Var1)) 
@@ -186,11 +165,8 @@ exp_data$allP.exp = as.numeric(as.character(exp_data$allP.exp))
 ratio.exp = exp_data$allP.exp/exp_data$test1.exp
 # Append ratios to data set
 exp_data = cbind(exp_data, ratio.exp)
-
-# Write Experimental Data CSV --> Used in "qPCR_Plotting" code for visuals
-#write.csv(file="YEAR_MONTH_Experimental_DF", exp_data)
-
 ### COMPLETED EXPERIMENTAL DATA FRAME ###
+
 
 ##########################################################
 ############### Combination Ratios for qPCR ##############
@@ -231,7 +207,6 @@ newratios.calib.boxplot = newratios.calib.boxplot[-1,]
 newratiosvector = as.vector(as.matrix.data.frame(newratios.calib.boxplot))
 startqvector = sort(rep(unique(startquan), length(newratios.calib.boxplot$`0.01`)))
 newratios.calib.boxplot = as.data.frame(cbind(newratiosvector, startqvector))
-
 ### COMPLETED COMBINATION RATIOS ###
 
 ##########################################################
@@ -299,28 +274,62 @@ summary(model)
 zscore = (exp_data$ratio.exp - mean(exp_data$ratio.exp))/sd(exp_data$ratio.exp)
 prob.matrix = predict(model, zscore, type='p')
 
-# 
+# Apply probability matrix to the adjusted test 1 averages
 apply(prob.matrix, 1, function(x) x*calib_adj$adj.test1.avg)
 exp_data$exp.adjust = colSums(apply(prob.matrix, 1, function(x) x*calib_adj$adj.test1.avg))
 
 # Create new column with stress product (VQTL input)
 exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
 
-<<<<<<< HEAD
-write.csv(file="C:/Users/twili/Desktop/GIThub/Andrew/stapleton_Lab/Stress_Splicing/2018_11/2018_11_withStress.csv", exp_data)
-
-### PLOTS for Presentation ###
-
-
-# Boxplot comparing calib and exp ratios
-#boxplot(newratios.calib$combratio, exp_data_filtered$ratio.exp, ylab="Ratio", names=c("Calibrated", "Experimental"), main="Comparison of Ratios")
-=======
->>>>>>> upstream/master
 
 ###PLOTS###
 # Calibrated data - s.q. vs. ratio
 plot(newratios.calib.boxplot$startqvector, as.numeric(newratios.calib.boxplot$newratiosvector), xlab='Starting Quantity', ylab='Ratio', 
-     main='2018_11 Calibrated Data - Starting Quantities vs. Ratios')
+     main='2018_8 Calibrated Data - Starting Quantities vs. Ratios')
+
+# ##PLOTS##
+# # Calibrated data - s.q. vs. ratio
+# #Plot for pairwise
+# plot(as.factor(calib_data$startq), calib_data$ratio, xlab='Starting Quantity', ylab='Ratio', 
+#      main='Calibrated Data - Starting Quantities vs. Pairwise Ratios')
+# #Plot for non-pairwise
+# plot(as.factor(newratios.calib$startqvalues), newratios.calib$combratio, xlab='Starting Quantity', ylab='Ratio', 
+#      main='Calibrated Data - Starting Quantities vs. Non-Pairwise Ratios')
+# 
+# #Boxplot of Stress Product
+# boxplot(exp_data$stress, main='Box Plot of Stress Product', ylab='Stress Product')
+# hist(exp_data$stress, xlab='Stress Product', main='Histogram of Stress Product', col='blue')
+
+
+
+# #AllP#
+# hist(data$allP, xlim=c(0,50), ylim=c(0,100), col=rgb(1,0,0,0.5), main='Histogram of All Products', xlab='All Products Derivative')
+# hist(exp_data$allP.exp, xlim=c(0,50), ylim=c(0,100), add=T, col=rgb(0,0,1,0.5))
+# legend("topleft",
+#         c("Calibration", "Experimental"),
+#           fill=c(rgb(1,0,0,0.5), rgb(0,0,1,0.5)), bty="n")
+# #dev.off()
+# #Test1#
+# hist(data$test1, xlim=c(0,30), ylim=c(0,80), col=rgb(1,0,0,0.5), main='Histogram of Test 1', xlab='Test 1 Derivative')
+# hist(exp_data$test1.exp, xlim=c(0,30), ylim=c(0,80), add=T, col=rgb(0,0,1,0.5))
+# legend("topleft",
+#        c("Calibration", "Experimental"),
+#        fill=c(rgb(1,0,0,0.5), rgb(0,0,1,0.5)), bty="n")
+# #dev.off()
+# #Ratios - Calibrated#
+# hist(data$ratio, xlim=c(0,3), ylim=c(0,70), col=rgb(1,0,0,0.5), main='Histogram of Ratios', xlab='Ratio')
+# #Ratios - Experimental#
+# # Values excluded from histogram that will be further investigated later (their index)
+# hist(exp_data$ratio.exp, xlim=c(0,3), ylim=c(0,70), col=rgb(0,0,1,0.5), add=T)
+# legend("topleft",
+#        c("Calibration", "Experimental"),
+#        fill=c(rgb(1,0,0,0.5), rgb(0,0,1,0.5)), bty="n")
+# #Calib Plot - S.Q. vs. Ratios
+# plot(calib_data$startq, calib_data$ratio, xlab='Starting Quantity', ylab='Ratio', 
+#       main='Calibrated Data - Starting Quantities vs. Ratios')
+# #Calib Plot - Test1 vs. Ratio
+# plot(calib_data$test1, calib_data$ratio, xlab='Test 1 Derivative', ylab='Ratio', 
+#       main='Calibrated Data - Test 1 Derivative vs. Ratio')
 
 
 #Compare sample ID's between plate and CT data sets
@@ -372,152 +381,116 @@ plot(newratios.calib.boxplot$startqvector, as.numeric(newratios.calib.boxplot$ne
 # plate3 = plate3[-ntc_plate3,]
 # ct3 = ct3[-ntc_ct3,]
 
-###_______________________OLD CODE_______________________###
-
-# # CREATE DATA FRAME WITH ONLY S.Q. AND ADJUSTMENT VAL
-# calib_adj = calib_data[,c(1,6)]
+# ########################################################## 
+# ################ Experimental Data Framing ###############
+# ########################################################## 
+# # Create/Write data frame for Calibrated values
+# exp_df = deriv %>% filter(str_detect(sampleID, "g")==FALSE)
+# # Sort by starting quantity
+# exp_df = exp_df[order(exp_df$starting_quantity),]
+# # Remove first and last rows (unnecessary labeling)
+# exp_df = exp_df[-1,]
+# exp_df = exp_df[-nrow(exp_df),]
+# exp_df$sampleID = as.numeric(as.character(exp_df$sampleID))
+# exp_df$cpD1 = as.numeric(as.character(exp_df$cpD1))
+# exp_data = exp_df
+# # Order data by sampleID
+# exp_data = exp_data[order(exp_data$sampleID),]
+# # Find counts of each unique sampleID; for sample with a count not equal to 2
+# # Send removed sampleID's to Dr. S, with additional plots of raw cycle values for each of these samples
+# # Write CSV file of samples with count not equal to 2 to send to Dr. S for investigation
+# ### To work on --> add derivative values in to the CSV file
+# ### To work on --> creating a separate CSV file with samples with unusual derivatives
+# counts = as.data.frame(table(exp_data$sampleID))
+# countsne2 = as.data.frame(filter(counts, !counts$Freq==2))
+# #write.csv(file="2018_11_SamplesToInvestigate", countsne2)
+# # Remove samples without both allP and test1 from data set
+# exp_data = exp_data[!exp_data$sampleID %in% countsne2$Var1,]
 # 
-# average <- function(col1){
-#   avg = NULL;
-#   for (i in col1){
-#     avg = c(avg,mean(col1))
+# # Create empty vectors for for-loop to input cpD1 values
+# test1.exp = c()
+# allP.exp = c()
+# sampleID.exp = c()
+# # For loop -- iterating thru starting quantity and reaction type to return cpD1 values 
+# for(i in 1:length(exp_data$sampleID)){
+#   id.exp = toString(exp_data$sampleID[i])
+#   if(i %% 2 == 1){
+#     sampleID.exp = c(sampleID.exp, id.exp)
 #   }
-#   return(avg)
+#   val = toString(exp_data$reaction_type[i])
+#   if(strcmp(val, "test1")){
+#     test1.exp = c(test1.exp, exp_data$cpD1[i])
+#   }
+#   if(strcmp(val, "all_products")){
+#     allP.exp = c(allP.exp, exp_data$cpD1[i])
+#   }
 # }
-# #Subset data by starting quantity
-# group = split.data.frame(calib_adj, calib_adj$startq)
 # 
-# adj.test1.avg = NULL;
-# for (k in group){
-#   adj.test1.avg = c(adj.test1.avg, average(k$adjusted_test1))
-# }
-# print(adj.test1.avg)
+# # Bind test1 and allProd cpD1 values by sample ID
+# exp_data = cbind(sampleID.exp, test1.exp, allP.exp)
+# exp_data = as.data.frame(exp_data)
+# exp_data$test1.exp = as.numeric(as.character(exp_data$test1.exp))
+# exp_data$allP.exp = as.numeric(as.character(exp_data$allP.exp))
+# # Create column of ratios
+# ratio.exp = exp_data$allP.exp/exp_data$test1.exp
+# # Append ratio column to data frame
+# exp_data = cbind(exp_data, ratio.exp)
+# exp_data$ratio.exp = as.numeric(as.character(exp_data$ratio.exp))
 # 
-# calib_adj = as.data.frame(unique(cbind(as.character(calib_data$startq), adj.test1.avg)))
-# calib_adj$adj.test1.avg = as.numeric(as.character(calib_adj$adj.test1.avg))
-# # Rename columns
-# colnames(calib_adj)=c("startq", "adj.test1.avg")
+# # Write CSV file
+# #write.csv(exp_data, file="2018_11_Experimental_Data_Frame.csv")
 # 
-# # Ordinal Logistic Regression Model - starting quantity as response to calibrated z-score
-# model = polr(as.factor(calib_data$startq) ~ zscore, Hess = TRUE)
-# summary(model)
-# 
-# # Calculate experimental data z-score
-# zscore = (exp_data$ratio.exp - mean(exp_data$ratio.exp))/sd(exp_data$ratio.exp)
-# prob.matrix = predict(model, zscore, type='p')
-# 
-# apply(prob.matrix, 1, function(x) x*calib_adj$adj.test1.avg)
-# exp_data$exp.adjust = colSums(apply(prob.matrix, 1, function(x) x*calib_adj$adj.test1.avg))
-# 
-# # Create new column with stress product (VQTL input)
-# exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
-# 
-# ### PLOTS for Presentation ###
-# 
-# 
-# # Boxplot comparing calib and exp ratios
-# #boxplot(newratios.calib$combratio, exp_data_filtered$ratio.exp, ylab="Ratio", names=c("Calibrated", "Experimental"), main="Comparison of Ratios")
-# 
-# # Calibrated data - s.q. vs. ratio
-# #Plot for pairwise
-# plot(as.factor(calib_data$startq), calib_data$ratio, xlab='Starting Quantity', ylab='Ratio', 
-#      main='Calibrated Data - Starting Quantities vs. Pairwise Ratios')
-# #Plot for non-pairwise
-# plot(as.factor(newratios.calib$startqvalues), newratios.calib$combratio, xlab='Starting Quantity', ylab='Ratio', 
-#      main='Calibrated Data - Starting Quantities vs. Non-Pairwise Ratios')
-# 
-# #Boxplot of Stress Product
-# boxplot(exp_data$stress, main='Box Plot of Stress Product', ylab='Stress Product')
-# hist(exp_data$stress, xlab='Stress Product', main='Histogram of Stress Product', col='blue')
-#
-#
-# # Adjustment: allP - test1
-# calib_data$diff = calib_data$allP - calib_data$adjusted_test1
-# 
-# calib_data = cbind(calib_data, calib.zscore)
-# plot(as.factor(calib_data$startq), calib_data$calib.zscore)
-# 
-# # Ordinal Logistic Regression Model - starting quantity as response to calibrated z-score
-# model = polr(as.factor(startqvalues) ~ calib.zscore, Hess = TRUE)
-# summary(model)
-# # Calculate experimental data z-score
-# exp_data$exp.zscore = (exp_data$ratio.exp - mean(exp_data$ratio.exp))/sd(exp_data$ratio.exp)
-#prob.matrix = predict(model, exp_data$exp.zscore, type='p') 
-# apply(prob.matrix, 1, function(x) x*calib_data$diff)
-# exp_data$VQTL = colSums(apply(prob.matrix, 1, function(x) x*calib_data$diff))
-
-
-
-#Predict s.q. using ordinal logistic mode
-#startq~Zcalb
-#pred(model~zexp)
-### just using z scores to predict
-
-###### use the probability starting quantity matrix from the predict function
-#to find the weighted average 
+# ### COMPLETED EXPERIMENTAL DATA FRAME ###
 
 # ########################################################## 
-# #### PREDICT STARTING QUANTITIES - Experimental Data ####
+# ############ ADJUSTMENT MODEL Calibrated Data ############
 # ########################################################## 
 # 
-# # Using the adjustment model on the expiremental data
-# new = data.frame((ratio = exp_data$allP/exp_data$test1), sampleID.exp)
-# exp_predict_sq = as.data.frame(predict(OLR, new, interval = "confidence"))
-# # Append sample ID's and corresponding starting quantity predictions
-# exp_predict_sq = cbind(exp_predict_sq, exp_data$sampleID.exp)
-# # Rename columns, re-order
-# colnames(exp_predict_sq)=c("predicted_sq", "sampleID.exp")
-# exp_predict_sq = exp_predict_sq[c(2,1)]
-# #exp_predict_sq$predicted_sq = as.numeric(as.character(exp_predict_sq$predicted_sq))
-# #exp_predict_sq$sampleID.exp = as.numeric(as.character(exp_predict_sq$sampleID.exp))
-# # Merge complete experimental data frame with predicted starting quantities data frame by sample ID
-# exp_data_predict = merge.data.frame(exp_data, exp_predict_sq, by="sampleID.exp")
-# 
-# ### COMPLETED ADJUSTMENT MODEL - EXPERIMENTAL DATA ###
-# 
-# ########################################################## 
-# #### ADJUSTMENT VALUE BY STARTING QUANTITY ####
-# ########################################################## 
-# 
-# # Create new data frame containing only predicted s.q. and adj_val
-# sq.adjval = as.data.frame(cbind(as.numeric(as.character(calib_data$startq)), calib_data$adj_val))
-# sq.adjval$V1=as.factor(format(sq.adjval$V1, scientific=FALSE))
-# colnames(sq.adjval)=c("predicted_sq", "adj_val")
-# # Remove repeat rows
-# sq.adjval = sq.adjval[!duplicated(sq.adjval), ]
-# # Match adjustment value for each s.q. with corresponding predicted s.q. in experimental data frame
-# exp_data_predict = merge(exp_data_predict, sq.adjval, by='predicted_sq')
-# exp_data_predict = exp_data_predict[order(exp_data_predict$sampleID.exp),]
-# exp_data_predict = exp_data_predict[c(2,3,4,5,6,1)]
-# # 
-# #Calculate z-score for calibrated data
-# calib.zscore = (calib_data$ratio - mean(calib_data$ratio))/sd(calib_data$ratio)
-# #Predict calibrated data ratios using experimental data
-# pred.ratio = calib.zscore*sd(ratio.exp)+mean(ratio.exp)
-# #Append y (predicted calibrated ratios) to calibrated data frame
-# calib_data = cbind(calib_data, pred.ratio)
 # # Create empty vectors for for-loop input
-# calib_data = as.data.frame(calib_data)
-# calib_data$test1 = as.numeric(as.character(calib_data$test1))
-# calib_data$allP = as.numeric(as.character(calib_data$allP))
+# data = as.data.frame(calib_data)
+# data$test1 = as.numeric(as.character(data$test1))
+# data$allP = as.numeric(as.character(data$allP))
 # adj_val = c()
 # allP = c()
 # startq = c()
-# ratio =calib_data$allP/calib_data$test1
+# # Calculate ratio values
+# ratio =data$allP/data$test1
+# # Append ratios to data set
+# data=cbind(data,ratio)
 # # Itterating through each set of (3) observations performing U-Stats on each set of inputs
-# for (i in 1:(nrow(calib_data)/3)){
-#   t_x <- c(calib_data$allP[3*i - 2], calib_data$allP[3*i - 1], calib_data$allP[3*i])
-#   t_y <- c(calib_data$test1[3*i - 2], calib_data$test1[3*i - 1], calib_data$test1[3*i])
+# for (i in 1:(nrow(data)/3)){
+#   t_x <- c(data$allP[3*i - 2], data$allP[3*i - 1], data$allP[3*i])
+#   t_y <- c(data$test1[3*i - 2], data$test1[3*i - 1], data$test1[3*i])
 #   adj <- mean(outer(t_x, t_y, "-"))
 #   adj_val <- c(adj_val, adj, adj, adj)
 # }
+# # Calculate adjusted test1 value
 # adjusted_test1 <- test1 + adj_val
 # # Append adjusted test1 values and adjustment value to data set
-# calib_data=cbind(calib_data,adjusted_test1,adj_val)
-# # Write Calibrated Data CSV --> Used in "qPCR_Plotting" code for visuals
-# #write.csv(file="YEAR_MONTH_Calibrated_DF", calib_data)
-
-
+# calib_data=cbind(data,adjusted_test1,adj_val)
+# # Creating the adjustment model lm(y-axis~x-axis)
+# # Changed adj_val^2 to adj_val to try to make the model better --> VERIFY THIS WITH DR. WANG
+# adj_model <- lm(adj_val~ratio) #Adjusted/avg slopes model --> to get JC VQTL vals 
+# summary(adj_model) 
+# # Plot adjustment model 
+# par(mfrow = c(2,2))
+# plot(adj_model)
+# dev.off()
+# # Plot ratios vs. adjustment values
+# plot(ratio, adj_val, main="Ratios vs. Adjustment Values", col="blue", xlab="Ratio", ylab="Adjustment Value")
+# abline(lm(adj_val~ratio), col="blue")
+# 
+# ### COMPLETED ADJUSTMENT MODEL - CALIBRATED DATA ###
+# 
+# ### ADJUSTMENT MODEL - EXPERIMENTAL DATA ### 
+# # Using the adjustment model on the expiremental data
+# exp.data = data.frame(ratio = exp_data$allP.exp/exp_data$test1.exp)
+# 
+# predict(adj_model, exp.data, interval = "confidence")
+# 
+# #---> Fill in any remaining parts of experimental adjusmtent model
+# 
+# ### COMPLETED ADJUSTMENT MODEL - EXPERIMENTAL DATA ###
 
 
 

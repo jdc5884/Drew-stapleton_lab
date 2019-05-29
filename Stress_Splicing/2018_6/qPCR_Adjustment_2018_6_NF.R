@@ -245,7 +245,7 @@ calib_data=cbind(calib_data,adjusted_test1,adj_val)
 # Write Calibrated Data CSV --> Used in "qPCR_Plotting" code for visuals
 #write.csv(file="YEAR_MONTH_Calibrated_DF", calib_data)
  
-# Adjustment: allP - test1 -- USING IN MODEL TO MULTIPLY PROBABILITY MATRIX BY
+# Adjustment: allP - test1 -- Using in model to multiply probability matrix by
 calib_data$diff = calib_data$allP - calib_data$adjusted_test1
 
 # Ordinal Logistic Regression Model - starting quantity as response to calibrated z-score

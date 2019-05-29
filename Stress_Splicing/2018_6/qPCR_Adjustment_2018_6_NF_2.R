@@ -11,7 +11,7 @@ library(MASS)
 library(glm.predict)
 
 # Mac Directory
-setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_8")
+setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_6")
 #setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_(MONTH)")
 # PC Directory
 #setwd("C:/Users/twili/Desktop/GIThub/StapletonLab/StressSplicing/qPCR")
@@ -25,7 +25,7 @@ setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_8")
 
 # In the case of having one CSV containing calculated derivatives, use this code:
 #deriv=read.csv(file = "(YEAR_MONTH_PLATE_qPCR_output.csv", header=FALSE)
-deriv=read.csv(file = "2018_8_1_plate_qPCR_output.csv", header=FALSE)
+deriv=read.csv(file = "2018_06_01_plate_qPCR_output_2019_04_04.csv", header=FALSE)
 
 ########################################################## 
 ################### Initial Data Framing #################
@@ -35,6 +35,8 @@ deriv=read.csv(file = "2018_8_1_plate_qPCR_output.csv", header=FALSE)
 deriv = deriv[-1,-1]
 # Transpose derivatives to be in equivalent format as raw plate data
 deriv = as.data.frame(t(deriv), header=TRUE)
+# Remove blank column (4th)
+#deriv = deriv[,-5]
 # Rename columns
 colnames(deriv)=c("reaction_type", "sampleID", "starting_quantity", "cpD1", "cpD2")
 # Remove extra labels row
@@ -50,18 +52,20 @@ deriv = deriv[,-c(5,6)]
 deriv['sampleID_Minus'] = grepl('minus', deriv$sampleID)
 # Remove 'Minus' values (include only gblock+ values), and indicator (T/F) column
 minus = which(deriv$sampleID_Minus)
-#deriv = deriv[-minus,]
-deriv = deriv[,-c(5)]
-# Remove two extra label rows from center of data frame
-# deriv['label.row'] = grepl('cpD1', deriv$cpD1)
-# extra = which(deriv$label.row)
-# deriv = deriv[-extra,]
-# deriv = deriv[,-5]
-# Filter observatinos with unusual (~1.00) CP vals
-deriv$cpD1 = as.numeric(as.character(deriv$cpD1))
-deriv = deriv %>% filter((deriv$cpD1 < 2) == FALSE)
+deriv = deriv[-minus,]
+deriv = deriv[,-5]
+
+# Filter observations with unusual CT values
+
+
+# # Filter observatinos with unusual (~1.00) CP vals
+# exp_data = exp_data %>% filter((exp_data$test1.exp < 2) == FALSE)
+# exp_data = exp_data %>% filter((exp_data$allP.exp < 2) == FALSE)
 
 ### COMPLETED INITIAL DATA FRAMING ###
+
+
+
 
 
 ########################################################## 
@@ -159,7 +163,9 @@ exp_data$allP.exp = as.numeric(as.character(exp_data$allP.exp))
 ratio.exp = exp_data$allP.exp/exp_data$test1.exp
 # Append ratios to data set
 exp_data = cbind(exp_data, ratio.exp)
-
+# Filter observatinos with unusual (~1.00) CP vals
+exp_data = exp_data %>% filter((exp_data$test1.exp < 2) == FALSE)
+exp_data = exp_data %>% filter((exp_data$allP.exp < 2) == FALSE)
 # Write Experimental Data CSV --> Used in "qPCR_Plotting" code for visuals
 #write.csv(file="YEAR_MONTH_Experimental_DF", exp_data)
 
