@@ -222,7 +222,12 @@ calib_data$allP = as.numeric(as.character(calib_data$allP))
 adj_val = c()
 allP = c()
 startq = c()
-ratio =calib_data$allP/calib_data$test1
+ratio = calib_data$allP/calib_data$test1
+
+
+### N.F. - Split calib_data by starting quantity before calculating adj vals ###
+group.calib = split.data.frame(calib_data, calib_data$startq)
+
 # Itterating through each set of (3) observations performing U-Stats on each set of inputs
 for (i in 1:(nrow(calib_data)/3)){
   t_x <- c(calib_data$allP[3*i - 2], calib_data$allP[3*i - 1], calib_data$allP[3*i])
@@ -259,7 +264,7 @@ for (k in group){
 print(adj.test1.avg)
 
 calib_adj = as.data.frame(unique(cbind(as.character(calib_data$startq), adj.test1.avg)))
-calib_adj$adj.test1.avg = as.numeric(as.character(calib_adj$adj.test1.avg))
+#calib_adj$adj.test1.avg = as.numeric(as.character(calib_adj$adj.test1.avg))
 # Rename columns
 colnames(calib_adj)=c("startq", "adj.test1.avg")
 #############################################
@@ -301,7 +306,7 @@ exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
 
 
 ###PLOTS###
-<<<<<<< HEAD:Stress_Splicing/2018_8/qPCR_Adjustment_2018_8.R
+#<<<<<<< HEAD:Stress_Splicing/2018_8/qPCR_Adjustment_2018_8.R
 # Calibrated data - s.q. vs. ratio)
 plot(newratios.calib.boxplot$startqvector, as.double(newratios.calib.boxplot$newratiosvector), xlab='Starting Quantity', ylab='Ratio', 
      main='2018_8 Calibrated Data - Starting Quantities vs. Ratios')
