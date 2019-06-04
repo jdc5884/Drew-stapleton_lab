@@ -203,17 +203,13 @@ for (k in group){
 # Create data frame with unique ratios at each starting quantity
 startqvalues = rep(unique(startquan), rep(length(unique(startquan)),length(unique(startquan)))) 
 newratios.calib = data.frame(rbind(unique(startqvalues), combratio), stringsAsFactors = FALSE)
-newratios.calib = t(newratios.calib)
+# Duplicate newratios.calib data frame
 newratios.calib = as.data.frame(newratios.calib)
-newratios.calib$combratio = as.numeric(newratios.calib$combratio)
-newratios.calib$startqvalues = as.numeric(newratios.calib$startqvalues)
-# Duplicate newratios.calib data frame, transpose for boxplot visualizations at each s.q.
-newratios.calib.boxplot = as.data.frame(t(newratios.calib))
-colnames(newratios.calib.boxplot) = c("0.01", "0.05", "0.10", "0.50", "1.00", "50.00")
-newratios.calib.boxplot = newratios.calib.boxplot[-1,]
-newratiosvector = as.vector(as.matrix.data.frame(newratios.calib.boxplot))
-startqvector = sort(rep(unique(startquan), length(newratios.calib.boxplot$`0.01`)))
-newratios.calib.boxplot = as.data.frame(cbind(newratiosvector, startqvector))
+colnames(newratios.calib) = c("0.01", "0.05", "0.10", "0.50", "1.00", "50.00")
+newratios.calib = newratios.calib[-1,]
+newratiosvector = as.numeric(as.vector(as.matrix.data.frame(newratios.calib)))
+startqvector = sort(rep(unique(startquan), length(newratios.calib$`0.01`)))
+newratios.calib = as.data.frame(cbind(newratiosvector, startqvector), stringsAsFactors = FALSE)
 
 #################### end combination ratios #####################
 
@@ -221,13 +217,9 @@ newratios.calib.boxplot = as.data.frame(cbind(newratiosvector, startqvector))
 ########## PROBABILITY MODEL - Calibrated Data ###########
 ##########################################################
 
-# Calculate z-score for calibrated data
-zscore = (calib_data$ratio - mean(calib_data$ratio))/sd(calib_data$ratio)
-# Predict calibrated data ratios using experimental data
-pred.ratio = zscore*sd(ratio.exp)+mean(ratio.exp)
-# Append y (predicted calibrated ratios) to calibrated data frame -- CALIBRATED RATIOS IN TERMS OF EXPERIMENTAL PARAMETERS
-calib_data = cbind(calib_data, pred.ratio) 
-# Create empty vectors for for-loop input
+##### Finding the average adjusted test 1 #########
+#(this section should be able to be calculated independent of new ratio values)
+# Create empty vectors for for-loop input 
 calib_data$test1 = as.numeric(as.character(calib_data$test1))
 calib_data$allP = as.numeric(as.character(calib_data$allP))
 adj_val = c()
@@ -250,7 +242,7 @@ calib_data=cbind(calib_data,adjusted_test1,adj_val)
 # Adjustment: allP - test1 -- Using in model to multiply probability matrix by
 calib_data$diff = calib_data$allP - calib_data$adjusted_test1
 
-# CREATE DATA FRAME WITH ONLY S.Q. AND ADJUSTMENT VAL
+## CREATE DATA FRAME WITH ONLY S.Q. AND ADJUSTMENT VAL ##
 calib_adj = calib_data[,c(1,6)]
 
 average <- function(col1){
@@ -260,7 +252,7 @@ average <- function(col1){
   }
   return(avg)
 }
-#Subset data by starting quantity
+##Subset data by starting quantity
 group = split.data.frame(calib_adj, calib_adj$startq)
 
 adj.test1.avg = NULL;
@@ -273,11 +265,31 @@ calib_adj = as.data.frame(unique(cbind(as.character(calib_data$startq), adj.test
 calib_adj$adj.test1.avg = as.numeric(as.character(calib_adj$adj.test1.avg))
 # Rename columns
 colnames(calib_adj)=c("startq", "adj.test1.avg")
+#############################################
 
+##### Creating the components of the ORLM ######
+# Calculate z-score for calibrated data
+zscore = (newratiosvector - mean(newratiosvector))/sd(newratiosvector)
+newratios.calib$zscore = zscore
+# Predict calibrated data ratios using experimental data
+pred.ratio = zscore*sd(ratio.exp)+mean(ratio.exp) #why do we need this???
+newratios.calib$pred.ratio = pred.ratio
+# Append y (predicted calibrated ratios) to calibrated data frame -- CALIBRATED RATIOS IN TERMS OF EXPERIMENTAL PARAMETERS
+#no way of knowing if the pred.ratio and the correct starting quantities are lining up correctly #
+#calib_data = cbind(calib_data,newratiosvector, pred.ratio) 
 
 # Ordinal Logistic Regression Model - starting quantity as response to calibrated z-score
-model = polr(as.factor(calib_data$startq) ~ zscore, Hess = TRUE)
+model = polr(as.factor(newratios.calib$startqvector) ~ newratios.calib$pred.ratio, Hess = TRUE)
+# should the model be based off of the relation between startq and pred.ratio or zscore?
+model = polr(as.factor(newratios.calib$startqvector) ~ newratios.calib$zscore, Hess = TRUE)
 summary(model)
+(ctable <- coef(summary(model)))
+## calculate and store p values
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+options(scipen=999)
+## combined table
+(ctable <- cbind(ctable, "p value" = p))
+#############################################
 
 # Calculate experimental data z-score
 zscore = (exp_data$ratio.exp - mean(exp_data$ratio.exp))/sd(exp_data$ratio.exp)
@@ -293,7 +305,9 @@ exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
 
 ###PLOTS###
 # Calibrated data - s.q. vs. ratio
-plot(newratios.calib.boxplot$startqvector, as.numeric(newratios.calib.boxplot$newratiosvector), xlab='Starting Quantity', ylab='Ratio', 
+plot(as.factor(newratios.calib$startqvector), as.numeric(newratios.calib$newratiosvector), xlab='Starting Quantity', ylab='Ratio', 
+     main='2018_6 Calibrated Data - Starting Quantities vs. Ratios')
+plot(as.factor(newratios.calib$startqvector), as.numeric(newratios.calib$zscore), xlab='Starting Quantity', ylab='Ratio', 
      main='2018_6 Calibrated Data - Starting Quantities vs. Ratios')
 
 
