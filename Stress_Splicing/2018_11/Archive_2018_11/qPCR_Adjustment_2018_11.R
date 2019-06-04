@@ -306,6 +306,16 @@ exp_data$exp.adjust = colSums(apply(prob.matrix, 1, function(x) x*calib_adj$adj.
 # Create new column with stress product (VQTL input)
 exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
 
+<<<<<<< HEAD
+write.csv(file="C:/Users/twili/Desktop/GIThub/Andrew/stapleton_Lab/Stress_Splicing/2018_11/2018_11_withStress.csv", exp_data)
+
+### PLOTS for Presentation ###
+
+
+# Boxplot comparing calib and exp ratios
+#boxplot(newratios.calib$combratio, exp_data_filtered$ratio.exp, ylab="Ratio", names=c("Calibrated", "Experimental"), main="Comparison of Ratios")
+=======
+>>>>>>> upstream/master
 
 ###PLOTS###
 # Calibrated data - s.q. vs. ratio
