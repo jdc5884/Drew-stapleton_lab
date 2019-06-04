@@ -283,8 +283,8 @@ exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
 
 
 ###PLOTS###
-# Calibrated data - s.q. vs. ratio
-plot(newratios.calib.boxplot$startqvector, as.numeric(newratios.calib.boxplot$newratiosvector), xlab='Starting Quantity', ylab='Ratio', 
+# Calibrated data - s.q. vs. ratio)
+plot(newratios.calib.boxplot$startqvector, as.double(newratios.calib.boxplot$newratiosvector), xlab='Starting Quantity', ylab='Ratio', 
      main='2018_8 Calibrated Data - Starting Quantities vs. Ratios')
 # Histogram - calib allP vs. exp allP
 hist(calib_data$allP, xlim=c(0,40), ylim=c(0,110), col=rgb(1,0,0,0.5), main='2018_8 Histogram of All Products', xlab='All Products Derivative')
