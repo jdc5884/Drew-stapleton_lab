@@ -9,7 +9,7 @@ library(tidyverse)
 library(dplyr)
 library(MASS)
 library(glm.predict)
-library(compare)
+library(Stack)
 
 # Mac Directory
 setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_11")
@@ -66,37 +66,33 @@ deriv$cpD1 = as.numeric(as.character(deriv$cpD1))
 ############ Removing Ununsual Observations ##############
 ##########################################################
 
-## CODE WORKING ON WITH DAVID ##
-# # Remove unusual observations from initial data frame (CT value less than 10)
-unusual_obs_2018_8 = deriv %>% filter(deriv$cpD1 < 10)
+# Remove unusual observations from initial data frame (CT value less than 10)
 deriv = deriv %>% filter(deriv$cpD1 >= 10)
-# # ### WORK ON: Appending raw plate cycle vals to unusual obs d.f.
-# # Frame raw plate data 
-# raw_plate_data.1 = read.csv(file = "2018_11_1_plate.csv", header=FALSE)
-# raw_plate_data.2 = read.csv(file = "2018_11_2_plate.csv", header=FALSE)
-# raw_plate_data = cbind(raw_plate_data.1, raw_plate_data.2)
-# 
-# comparison <- compare(raw_plate_data,deriv,allowAll=TRUE)
-# 
-# # Remove extra labels row and column 
-# raw_plate_data = raw_plate_data[-1,-1]
-# # Transpose derivatives to be in equivalent format as raw plate data
-# raw_plate_data = as.data.frame(t(raw_plate_data), header=TRUE)
-# raw_plate_data = raw_plate_data[-ntc,]
-# raw_plate_data = raw_plate_data[-minus,]
-# raw_plate_data = raw_plate_data[-extra,]
-# raw_plate_data = raw_plate_data[,-c(4,5)]
-# # Remove normal observations  
-# raw_plate_data = raw_plate_data[unusual,] 
+# Read in raw cycle data - may need to combine multiple files
+cycle1 = read.csv(file = "2018_11_1_plate.csv", header = FALSE)
+cycle2 = read.csv(file = "2018_11_2_plate.csv", header = FALSE)
+cycle = as.data.frame(cbind(cycle1, cycle2))
+# Create complete set of reaction data (derivative and cycle)
+reaction = Stack(deriv_complete, cycle1)
+# Remove repeat labeling
+replace = reaction[7:10,]
+reaction = reaction[-c(1:4, 7:10),]
+reaction = Stack(replace, reaction)
+# Transpose so column headers at top
+reaction = as.data.frame(t(reaction))
+reaction = reaction[,-c(6:7)]
+# Replace column names with first row
+colnames(reaction) <- as.character(unlist(reaction[1,]))
+reaction = reaction[-1,]
+colnames(reaction)[5] = "cpD1"
+reaction$cpD1 = as.numeric(as.character(reaction$cpD1))
+# Filter unusual observations (CT value less than 10)
+unusual_obs_2018_11 = reaction %>% filter(reaction$cpD1 < 10)
+# Write CSV file 
+#write.csv(unusual_obs_2018_11, file="Unusual_Obs_2018_11.csv")
 
-## ALTERNATE CODE ##
-# # Read in raw cycle data
-# cycle1 = read.csv(file = "2018_8_1_plate.csv", header = FALSE)
-# cycle2 = read.csv(file = "2018_8_2_plate.csv", header = FALSE)
-# cycle3 = read.csv(file = "2018_8_3_plate.csv", header = FALSE)
-# cycle = as.data.frame(cbind(cycle1, cycle2, cycle3))
-# unusual_obs_2018_8 = match()
 # ### COMPLETED UNUSUAL OBSERVATIONS REMOVAL/REPORTING ###
+
 
 
 ########################################################## 
@@ -311,6 +307,12 @@ exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
 # Calibrated data - s.q. vs. ratio
 plot(newratios.calib.boxplot$startqvector, as.numeric(newratios.calib.boxplot$newratiosvector), xlab='Starting Quantity', ylab='Ratio', 
      main='2018_11 Calibrated Data - Starting Quantities vs. Ratios')
+
+plot(as.factor(newratios.calib$startqvector), as.numeric(newratios.calib$newratiosvector), xlab='Starting Quantity', ylab='Ratio', 
+     main='2018_6 Calibrated Data - Starting Quantities vs. Ratios')
+plot(as.factor(newratios.calib$startqvector), as.numeric(newratios.calib$zscore), xlab='Starting Quantity', ylab='Ratio', 
+     main='2018_6 Calibrated Data - Starting Quantities vs. Ratios')
+
 # Histogram - calib allP vs. exp allP
 hist(calib_data$allP, xlim=c(0,50), ylim=c(0,110), col=rgb(1,0,0,0.5), main='2018_11 Histogram of All Products', xlab='All Products Derivative')
 hist(exp_data$allP.exp, xlim=c(0,50), ylim=c(0,110), add=T, col=rgb(0,0,1,0.5))

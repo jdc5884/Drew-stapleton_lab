@@ -9,6 +9,7 @@ library(tidyverse)
 library(dplyr)
 library(MASS)
 library(glm.predict)
+library(Stack)
 
 # Mac Directory
 setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_8")
@@ -66,16 +67,33 @@ deriv$cpD1 = as.numeric(as.character(deriv$cpD1))
 ##########################################################
 
 # Remove unusual observations from initial data frame (CT value less than 10)
-unusual_obs_2018_8 = deriv %>% filter(deriv$cpD1 < 10)
 deriv = deriv %>% filter(deriv$cpD1 >= 10)
-# ### WORK ON: Appending raw plate cycle vals to unusual obs d.f.
-# # Read in raw cycle data
-# cycle1 = read.csv(file = "2018_8_1_plate.csv", header = FALSE)
-# cycle2 = read.csv(file = "2018_8_2_plate.csv", header = FALSE)
-# cycle3 = read.csv(file = "2018_8_3_plate.csv", header = FALSE)
-# cycle = as.data.frame(cbind(cycle1, cycle2, cycle3))
-# unusual_obs_2018_8 = match()
+# Read in raw cycle data - may need to combine multiple files
+cycle1 = read.csv(file = "2018_8_1_plate.csv", header = FALSE)
+cycle2 = read.csv(file = "2018_8_2_plate.csv", header = FALSE)
+cycle3 = read.csv(file = "2018_8_3_plate.csv", header = FALSE)
+cycle = as.data.frame(cbind(cycle1, cycle2, cycle3))
+# Create complete set of reaction data (derivative and cycle)
+reaction = Stack(deriv_complete, cycle)
+# Remove repeat labeling
+replace = reaction[7:10,]
+reaction = reaction[-c(1:4, 7:10),]
+reaction = Stack(replace, reaction)
+# Transpose so column headers at top
+reaction = as.data.frame(t(reaction))
+reaction = reaction[,-c(6:7)]
+# Replace column names with first row
+colnames(reaction) <- as.character(unlist(reaction[1,]))
+reaction = reaction[-1,]
+colnames(reaction)[5] = "cpD1"
+reaction$cpD1 = as.numeric(as.character(reaction$cpD1))
+# Filter unusual observations (CT value less than 10)
+unusual_obs_2018_8 = reaction %>% filter(reaction$cpD1 < 10)
+# Write CSV file 
+#write.csv(unusual_obs_2018_8, file="Unusual_Obs_2018_8.csv")
+
 # ### COMPLETED UNUSUAL OBSERVATIONS REMOVAL/REPORTING ###
+
 
 
 ########################################################## 
@@ -228,34 +246,40 @@ ratio = calib_data$allP/calib_data$test1
 ### N.F. - Split calib_data by starting quantity before calculating adj vals ###
 group.calib = split.data.frame(calib_data, calib_data$startq)
 
-# Itterating through each set of (3) observations performing U-Stats on each set of inputs
-for (i in 1:(nrow(calib_data)/3)){
-  t_x <- c(calib_data$allP[3*i - 2], calib_data$allP[3*i - 1], calib_data$allP[3*i])
-  t_y <- c(calib_data$test1[3*i - 2], calib_data$test1[3*i - 1], calib_data$test1[3*i])
-  adj <- mean(outer(t_x, t_y, "-"))
-  adj_val <- c(adj_val, adj, adj, adj)
+
+adjusted_val = NULL
+for (i in group.calib){
+ adjusted_val = c(adjusted_val, average(i$allP)-average(i$test1))
 }
-adjusted_test1 <- test1 + adj_val
+print(adjusted_val)
+adjusted_test1 <- test1 + adjusted_val
+
 # Append adjusted test1 values and adjustment value to data set
-calib_data=cbind(calib_data,adjusted_test1,adj_val)
+calib_data=cbind(calib_data,adjusted_test1,adjusted_val)
 # Write Calibrated Data CSV --> Used in "qPCR_Plotting" code for visuals
 #write.csv(file="YEAR_MONTH_Calibrated_DF", calib_data)
 
-# Adjustment: allP - test1 -- Using in model to multiply probability matrix by
-calib_data$diff = calib_data$allP - calib_data$adjusted_test1
 
-## CREATE DATA FRAME WITH ONLY S.Q. AND ADJUSTMENT VAL ##
-calib_adj = calib_data[,c(1,6)]
 
-average <- function(col1){
-  avg = NULL;
-  for (i in col1){
-    avg = c(avg,mean(col1))
-  }
-  return(avg)
-}
-##Subset data by starting quantity
-group = split.data.frame(calib_adj, calib_adj$startq)
+
+# # Adjustment: allP - test1 -- Using in model to multiply probability matrix by
+# calib_data$diff = calib_data$allP - calib_data$adjusted_test1
+# 
+# ## CREATE DATA FRAME WITH ONLY S.Q. AND ADJUSTMENT VAL ##
+# calib_adj = calib_data[,c(1,6)]
+# 
+# average <- function(col1){
+#   avg = NULL;
+#   for (i in col1){
+#     avg = c(avg,mean(col1))
+#   }
+#   return(avg)
+# }
+
+
+
+# ##Subset data by starting quantity
+group = split.data.frame(calib_data, calib_data$startq)
 
 adj.test1.avg = NULL;
 for (k in group){
@@ -310,6 +334,11 @@ exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
 # Calibrated data - s.q. vs. ratio)
 plot(newratios.calib.boxplot$startqvector, as.double(newratios.calib.boxplot$newratiosvector), xlab='Starting Quantity', ylab='Ratio', 
      main='2018_8 Calibrated Data - Starting Quantities vs. Ratios')
+
+plot(as.factor(newratios.calib$startqvector), as.numeric(newratios.calib$newratiosvector), xlab='Starting Quantity', ylab='Ratio', 
+     main='2018_8 Calibrated Data - Starting Quantities vs. Ratios')
+
+
 # Histogram - calib allP vs. exp allP
 hist(calib_data$allP, xlim=c(0,40), ylim=c(0,110), col=rgb(1,0,0,0.5), main='2018_8 Histogram of All Products', xlab='All Products Derivative')
 hist(exp_data$allP.exp, xlim=c(0,40), ylim=c(0,110), add=T, col=rgb(0,0,1,0.5))
@@ -543,5 +572,13 @@ plot(as.factor(newratios.calib$startqvector), as.numeric(newratios.calib$pred.ra
 # 
 # ### COMPLETED ADJUSTMENT MODEL - EXPERIMENTAL DATA ###
 
-
+# 
+# # Itterating through each set of (3) observations performing U-Stats on each set of inputs
+# for (i in 1:(nrow(calib_data)/3)){
+#   t_x <- c(calib_data$allP[3*i - 2], calib_data$allP[3*i - 1], calib_data$allP[3*i])
+#   t_y <- c(calib_data$test1[3*i - 2], calib_data$test1[3*i - 1], calib_data$test1[3*i])
+#   adj <- mean(outer(t_x, t_y, "-"))
+#   adj_val <- c(adj_val, adj, adj, adj)
+# }
+# adjusted_test1 <- test1 + adj_val
 

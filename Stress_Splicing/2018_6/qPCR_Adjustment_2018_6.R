@@ -9,6 +9,7 @@ library(tidyverse)
 library(dplyr)
 library(MASS)
 library(glm.predict)
+library(Stack)
 
 # Mac Directory
 setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_6")
@@ -62,15 +63,28 @@ deriv$cpD1 = as.numeric(as.character(deriv$cpD1))
 ##########################################################
 
 # Remove unusual observations from initial data frame (CT value less than 10)
-unusual_obs_2018_6 = deriv %>% filter(deriv$cpD1 < 10)
 deriv = deriv %>% filter(deriv$cpD1 >= 10)
-# ### WORK ON: Appending raw plate cycle vals to unusual obs d.f.
-# # Read in raw cycle data
-# cycle1 = read.csv(file = "2018_8_1_plate.csv", header = FALSE)
-# cycle2 = read.csv(file = "2018_8_2_plate.csv", header = FALSE)
-# cycle3 = read.csv(file = "2018_8_3_plate.csv", header = FALSE)
-# cycle = as.data.frame(cbind(cycle1, cycle2, cycle3))
-# unusual_obs_2018_8 = match()
+# Read in raw cycle data - may need to combine multiple files
+cycle1 = read.csv(file = "2018_6_1_plate.csv", header = FALSE)
+# Create complete set of reaction data (derivative and cycle)
+reaction = Stack(deriv_complete, cycle1)
+# Remove repeat labeling
+replace = reaction[7:10,]
+reaction = reaction[-c(1:4, 7:10),]
+reaction = Stack(replace, reaction)
+# Transpose so column headers at top
+reaction = as.data.frame(t(reaction))
+reaction = reaction[,-c(6:7)]
+# Replace column names with first row
+colnames(reaction) <- as.character(unlist(reaction[1,]))
+reaction = reaction[-1,]
+colnames(reaction)[5] = "cpD1"
+reaction$cpD1 = as.numeric(as.character(reaction$cpD1))
+# Filter unusual observations (CT value less than 10)
+unusual_obs_2018_6 = reaction %>% filter(reaction$cpD1 < 10)
+# Write CSV file 
+#write.csv(unusual_obs_2018_6, file="Unusual_Obs_2018_6.csv")
+
 # ### COMPLETED UNUSUAL OBSERVATIONS REMOVAL/REPORTING ###
 
 
