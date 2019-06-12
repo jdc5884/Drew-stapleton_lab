@@ -352,6 +352,49 @@ legend("topleft",
        fill=c(rgb(1,0,0,0.5), rgb(0,0,1,0.5)), bty="n")
 
 
+#######################################
+####### 5-Fold Cross Validation #######
+#######################################
+
+n = length(calib_data[,1])
+set.seed(1)
+f <- 6
+folds <- rep_len(1:f, length.out = dim(calib_data)[1])
+folds <- sample(folds, size = dim(calib_data)[1], replace = F)
+table(folds)
+
+start.time <- Sys.time()
+OUT.GLM=NULL
+TRUTH = NULL; OUTPUT=NULL;
+for (k in 1:f) 
+{
+  test.ID <- which(folds == k)
+  train_set <- newratios.calib[-test.ID, ]
+  test_set <- newratios.calib[test.ID, ]
+  model.fit = polr(as.factor(newratios.calib$startqvector) ~ newratios.calib$zscore, Hess = TRUE)
+  olrm.pred = predict(model.fit, test_set$zscore, "probs")
+  olrm.class = ifelse (olrm.pred>0.5, 1,0)
+  table(olrm.class, test_set[,startqvector])
+  
+  TRUTH = c(TRUTH, test_set[,startqvector])
+  OUTPUT =c(OUTPUT, olrm.class)
+  Confusion.Table = table(TRUTH, OUTPUT)
+  print(Confusion.Table)
+  Overall.Accuracy = sum(diag(Confusion.Table))/sum(Confusion.Table)
+  print((Overall.Accuracy))
+  OUT.GLM =c(OUT.GLM, Overall.Accuracy)
+}
+print(OUT.GLM)
+mean(OUT.GLM) ##give the mean error for 5-fold CV 0.6269439
+sd(OUT.GLM) ##give the standard error for 5-fold CV 0.001727137
+end.time <- Sys.time()
+total.time <- end.time - start.time; total.time
+
+boxplot(OUT.GLM,col="orange")
+
+mean(TRUTH==OUTPUT)
+table(TRUTH,OUTPUT)
+
 
 
 ###### OLD CODE #######
