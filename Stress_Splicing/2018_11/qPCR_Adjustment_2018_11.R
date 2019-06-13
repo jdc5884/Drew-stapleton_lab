@@ -264,29 +264,24 @@ newratios.calib.boxplot = as.data.frame(cbind(newratiosvector, startqvector))
 # Create data frame with s.q. and ratio columns from calib data
 library(randomForest)
 data = calib_data[,c(1,4)]
-set.seed(1)
-train <- sample(nrow(data), 0.7*nrow(data), replace = FALSE)
+set.seed(5)  #predValid values change with different seeds...
+train <- sample(nrow(data), 0.7*nrow(data), replace = FALSE) #Significantly different results depending on how large training set (decreasing train set ==> higher accuracy?)
 TrainSet <- data[train,]
 ValidSet <- data[-train,]
 summary(TrainSet)
 # Create a Random Forest model with default parameters
-model1 <- randomForest(ratio ~ ., data = TrainSet, importance = TRUE)
+model1 <- randomForest(startq ~ ratio, data = TrainSet, importance = TRUE)
 # Fine tuning parameters of Random Forest model
-model2 <- randomForest(ratio ~ ., data = TrainSet, ntree = 500, mtry = 1, importance = TRUE)
+model2 <- randomForest(startq ~ ratio, data = TrainSet, ntree = 500, mtry = 1, importance = TRUE)
 # Predicting on train set
 predTrain <- predict(model2, TrainSet, type = "class")
-# Checking classification accuracy
+# Checking classification accuracy -- should return same trained values
 table(predTrain, TrainSet$startq)  
 # Predicting on Validation set
 predValid <- predict(model2, ValidSet, type = "class")
 # Checking classification accuracy
-mean(predValid == ValidSet$ratio)                    
-table(predValid,ValidSet$ratio)
-# Predicting on Validation set
-predValid <- predict(model2, ValidSet, type = "class")
-# Checking classification accuracy
-mean(predValid == ValidSet$ratio)                    
-table(predValid,ValidSet$ratio)
+mean(predValid == ValidSet$startq)                    
+table(predValid,ValidSet$startq)
 # Using For loop to identify the right mtry for model
 a=c()
 i=5
@@ -296,6 +291,7 @@ for (i in 3:8) {
   a[i-2] = mean(predValid == ValidSet$ratio)
 }
 a
+
 
 
 ##########################################################
