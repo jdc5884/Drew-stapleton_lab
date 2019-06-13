@@ -220,6 +220,7 @@ newratios.calib = t(newratios.calib)
 newratios.calib = as.data.frame(newratios.calib)
 newratios.calib$combratio = as.numeric(newratios.calib$combratio)
 newratios.calib$startqvalues = as.numeric(newratios.calib$startqvalues)
+
 # Duplicate newratios.calib data frame, transpose for boxplot visualizations at each s.q.
 newratios.calib.boxplot = as.data.frame(t(newratios.calib))
 colnames(newratios.calib.boxplot) = c("0.01", "0.05", "0.10", "0.50", "1.00", "50.00")
@@ -229,6 +230,73 @@ startqvector = sort(rep(unique(startquan), length(newratios.calib.boxplot$`0.01`
 newratios.calib.boxplot = as.data.frame(cbind(newratiosvector, startqvector))
 
 ### COMPLETED COMBINATION RATIOS ###
+
+###### IDENTIFY / REMOVE OUTLIERS -- GRUBBS TEST ######
+
+# library(sos)
+# library(outliers)
+# ratios <- newratios.calib.boxplot$newratiosvector
+# ratios <- as.numeric (newratios.calib.boxplot$newratiosvector)
+# grubbs.test(ratios)
+# outliers = as.data.frame(ratios)
+
+# library(outliers)
+# library(ggplot2)
+# X = newratios.calib.boxplot$newratiosvector
+# grubbs.flag <- function(x) {
+#   outliers <- NULL
+#   test <- x
+#   grubbs.result <- grubbs.test(test)
+#   pv <- grubbs.result$p.value
+#   while(pv < 0.05) {
+#     outliers <- c(outliers,as.numeric(strsplit(grubbs.result$alternative," ")[[1]][3]))
+#     test <- x[!x %in% outliers]
+#     grubbs.result <- grubbs.test(test)
+#     pv <- grubbs.result$p.value
+#   }
+#   return(data.frame(X=x,Outlier=(x %in% outliers)))
+# }
+# X = as.data.frame(X)
+#_______________________________#
+
+### RANDOM FOREST TEST ###
+
+# Create data frame with s.q. and ratio columns from calib data
+library(randomForest)
+data = calib_data[,c(1,4)]
+set.seed(1)
+train <- sample(nrow(data), 0.7*nrow(data), replace = FALSE)
+TrainSet <- data[train,]
+ValidSet <- data[-train,]
+summary(TrainSet)
+# Create a Random Forest model with default parameters
+model1 <- randomForest(ratio ~ ., data = TrainSet, importance = TRUE)
+# Fine tuning parameters of Random Forest model
+model2 <- randomForest(ratio ~ ., data = TrainSet, ntree = 500, mtry = 1, importance = TRUE)
+# Predicting on train set
+predTrain <- predict(model2, TrainSet, type = "class")
+# Checking classification accuracy
+table(predTrain, TrainSet$startq)  
+# Predicting on Validation set
+predValid <- predict(model2, ValidSet, type = "class")
+# Checking classification accuracy
+mean(predValid == ValidSet$ratio)                    
+table(predValid,ValidSet$ratio)
+# Predicting on Validation set
+predValid <- predict(model2, ValidSet, type = "class")
+# Checking classification accuracy
+mean(predValid == ValidSet$ratio)                    
+table(predValid,ValidSet$ratio)
+# Using For loop to identify the right mtry for model
+a=c()
+i=5
+for (i in 3:8) {
+  model3 <- randomForest(ratio ~ ., data = TrainSet, ntree = 500, mtry = i, importance = TRUE)
+  predValid <- predict(model3, ValidSet, type = "class")
+  a[i-2] = mean(predValid == ValidSet$ratio)
+}
+a
+
 
 ##########################################################
 ########## PROBABILITY MODEL - Calibrated Data ###########
@@ -309,9 +377,9 @@ plot(newratios.calib.boxplot$startqvector, as.numeric(newratios.calib.boxplot$ne
      main='2018_11 Calibrated Data - Starting Quantities vs. Ratios')
 
 plot(as.factor(newratios.calib$startqvector), as.numeric(newratios.calib$newratiosvector), xlab='Starting Quantity', ylab='Ratio', 
-     main='2018_6 Calibrated Data - Starting Quantities vs. Ratios')
+     main='2018_11 Calibrated Data - Starting Quantities vs. Ratios')
 plot(as.factor(newratios.calib$startqvector), as.numeric(newratios.calib$zscore), xlab='Starting Quantity', ylab='Ratio', 
-     main='2018_6 Calibrated Data - Starting Quantities vs. Ratios')
+     main='2018_11 Calibrated Data - Starting Quantities vs. Ratios')
 
 # Histogram - calib allP vs. exp allP
 hist(calib_data$allP, xlim=c(0,50), ylim=c(0,110), col=rgb(1,0,0,0.5), main='2018_11 Histogram of All Products', xlab='All Products Derivative')
