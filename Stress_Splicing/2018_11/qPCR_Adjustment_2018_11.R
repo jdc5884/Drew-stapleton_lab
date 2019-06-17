@@ -94,7 +94,6 @@ unusual_obs_2018_11 = reaction %>% filter(reaction$cpD1 < 10)
 # ### COMPLETED UNUSUAL OBSERVATIONS REMOVAL/REPORTING ###
 
 
-
 ########################################################## 
 ################# Calibrated Data Framing ################
 ########################################################## 
@@ -282,16 +281,15 @@ predValid <- predict(model2, ValidSet, type = "class")
 # Checking classification accuracy
 mean(predValid == ValidSet$startq)                    
 table(predValid,ValidSet$startq)
-# Using For loop to identify the right mtry for model
-a=c()
-i=5
-for (i in 3:8) {
-  model3 <- randomForest(ratio ~ ., data = TrainSet, ntree = 500, mtry = i, importance = TRUE)
-  predValid <- predict(model3, ValidSet, type = "class")
-  a[i-2] = mean(predValid == ValidSet$ratio)
-}
-a
-
+# # Using For loop to identify the right mtry for model
+# a=c()
+# i=5
+# for (i in 3:8) {
+#   model3 <- randomForest(ratio ~ ., data = TrainSet, ntree = 500, mtry = i, importance = TRUE)
+#   predValid <- predict(model3, ValidSet, type = "class")
+#   a[i-2] = mean(predValid == ValidSet$ratio)
+# }
+# a
 
 
 ##########################################################
@@ -366,6 +364,8 @@ exp_data$exp.adjust = colSums(apply(prob.matrix, 1, function(x) x*calib_adj$adj.
 # Create new column with stress product (VQTL input)
 exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
 
+# 
+
 
 ###PLOTS###
 # Calibrated data - s.q. vs. ratio
@@ -391,6 +391,8 @@ legend("topleft",
        c("Calibration", "Experimental"),
        fill=c(rgb(1,0,0,0.5), rgb(0,0,1,0.5)), bty="n")
 dev.off()
+
+
 
 
 ###UPDATE NONPAIRWISE RATIO PLOTS###

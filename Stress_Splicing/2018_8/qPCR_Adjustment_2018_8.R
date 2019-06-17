@@ -129,11 +129,12 @@ calib_data = as.data.frame(cbind(startq, test1, allP))
 # Format starting quantity values as decimals, not scientific notation
 calib_data$startq = as.factor(format(calib_data$startq, scientific=FALSE))
 calib_data$startq = as.factor(calib_data$startq)
-# Calculate ratio of allP/test1 --> PAIRWISE RATIOS -- INPUT FOR OLR MODEL
-ratio = calib_data$allP/calib_data$test1
 # Append ratios to data set
-calib_data = cbind(calib_data, ratio)
-### COMPLETED CALIBRATED DATA FRAME ###
+calib_data_8 = calib_data
+
+# Month 3 calibrated d.f.
+
+
 
 
 ########################################################## 
