@@ -1,0 +1,301 @@
+### HEIARCHICAL MODEL ###
+
+library(stringr)
+library(dplyr)
+library(pracma)
+
+# MONTH 1 (2018_6 / JUNE) CALIBRATED DATA FRAME
+
+# Mac Directory
+setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_6")
+deriv_complete=read.csv(file = "2018_6_1_qPCR_Output.csv", header=FALSE)
+deriv = deriv_complete
+# Remove extra labels column 
+deriv = deriv[,-1]
+# Transpose derivatives to be in equivalent format as raw plate data
+deriv = as.data.frame(t(deriv), header=FALSE)
+# Remove blank column (4th)
+#deriv = deriv[,-5]
+# Rename columns
+colnames(deriv)=c("plateID", "reaction_type", "sampleID", "starting_quantity", "cpD1", "cpD2")
+### Removing NTC and gblock-Minus values ###
+# Indicate if sample is NTC (negative control)
+deriv['sampleID_NTC'] = grepl('NTC', deriv$sampleID)
+# Remove NTC samples, indicator (T/F) column, and cpD2 values
+ntc = which(deriv$sampleID_NTC)
+deriv = deriv[-ntc,]
+deriv = deriv[,-c(6,7)]
+# Indicate if sample is 'Plus' or 'Minus'
+deriv['sampleID_Minus'] = grepl('minus', deriv$sampleID)
+# Remove 'Minus' values (include only gblock+ values), and indicator (T/F) column
+minus = which(deriv$sampleID_Minus)
+deriv = deriv[-minus,]
+deriv = deriv[,-6]
+deriv$cpD1 = as.numeric(as.character(deriv$cpD1))
+# Remove unusual observations from initial data frame (CT value less than 10)
+deriv = deriv %>% filter(deriv$cpD1 >= 10)
+# Create data frame for Calibrated values
+calib_data = deriv %>% filter(str_detect(sampleID, "g"))
+# Sort by starting quantity
+calib_data = calib_data[order(calib_data$starting_quantity),]
+calib_data$starting_quantity = as.numeric(as.character(calib_data$starting_quantity))
+calib_data$cpD1 = as.numeric(as.character(calib_data$cpD1))
+# Create empty vectors for for-loop to input cpD1 values
+test1 = c()
+allP = c()
+startq = c()
+# For loop -- iterating thru starting quantity and reaction type to return cpD1 values 
+for(i in 1:length(calib_data$starting_quantity)){
+  sq <- calib_data$starting_quantity[i]
+  if(i %% 6 == 1){
+    startq = c(startq,sq,sq,sq)
+  }
+  val <- toString(calib_data$reaction_type[i])
+  if(strcmp(val, "test1")){
+    test1 = c(test1, calib_data$cpD1[i])
+  }
+  if(strcmp(val, "all_products")){
+    allP = c(allP, calib_data$cpD1[i])
+  }
+}
+# Bind test1 and allProd cpD1 values by starting quantity
+calib_data = as.data.frame(cbind(startq, test1, allP))
+# Format starting quantity values as decimals, not scientific notation
+calib_data$startq=as.factor(format(calib_data$startq, scientific=FALSE))
+calib_data$startq=as.factor(calib_data$startq)
+# Append ratios to data set
+calib_data_6 =calib_data
+# Create month indicator column
+calib_data_6$month = strrep('june', length(calib_data_6))
+calib_data_6
+
+# MONTH 2 (2018_8 / AUGUST) CALIBRATED DATA FRAME
+
+setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_8")
+deriv.1<-read.csv(file = "2018_8_1_qPCR_Output.csv", header=FALSE)
+deriv.2<-read.csv(file = "2018_8_2_qPCR_Output.csv", header=FALSE)
+deriv.3=read.csv(file = "2018_8_3_qPCR_Output.csv", header=FALSE)
+deriv_complete=as.data.frame(cbind(deriv.1, deriv.2, deriv.3))
+deriv = deriv_complete
+# Remove extra column 
+deriv = deriv[,-1]
+# Transpose derivatives to be in equivalent format as raw plate data
+deriv = as.data.frame(t(deriv), header=TRUE)
+# Rename columns
+colnames(deriv)=c("plateID", "reaction_type", "sampleID", "starting_quantity", "cpD1", "cpD2")
+# Indicate if sample is NTC (negative control)
+deriv['sampleID_NTC'] = grepl('NTC', deriv$sampleID)
+# Remove NTC samples, indicator (T/F) column, and cpD2 values
+ntc = which(deriv$sampleID_NTC)
+deriv = deriv[-ntc,]
+deriv = deriv[,-c(6,7)]
+# Indicate if sample is 'Plus' or 'Minus'
+deriv['sampleID_Minus'] = grepl('minus', deriv$sampleID)
+# Remove 'Minus' values (include only gblock+ values), and indicator (T/F) column
+minus = which(deriv$sampleID_Minus)
+# IF "minus" RETURNS EMPTY VALUES, COMMENT OUT COMMAND BELOW
+deriv = deriv[-minus,]
+deriv = deriv[,-6]
+# Remove two extra label rows from center of data frame
+deriv['label.row'] = grepl('3', deriv$starting_quantity)
+extra = which(deriv$label.row)
+deriv = deriv[-extra,]
+deriv = deriv[,-6]
+deriv$cpD1 = as.numeric(as.character(deriv$cpD1))
+# Remove unusual observations from initial data frame (CT value less than 10)
+deriv = deriv %>% filter(deriv$cpD1 >= 10)
+# Create data frame for Calibrated values
+calib_data = deriv %>% filter(str_detect(sampleID, "g"))
+# Sort by starting quantity
+calib_data = calib_data[order(calib_data$starting_quantity),]
+calib_data$starting_quantity = as.numeric(as.character(calib_data$starting_quantity))
+calib_data$cpD1 = as.numeric(as.character(calib_data$cpD1))
+# Create empty vectors for for-loop to input cpD1 values
+test1 = c()
+allP = c()
+startq = c()
+# For loop -- iterating thru starting quantity and reaction type to return cpD1 values 
+for(i in 1:length(calib_data$starting_quantity)){
+  sq <- calib_data$starting_quantity[i]
+  if(i %% 6 == 1){
+    startq = c(startq,sq,sq,sq)
+  }
+  val <- toString(calib_data$reaction_type[i])
+  if(strcmp(val, "test1")){
+    test1 = c(test1, calib_data$cpD1[i])
+  }
+  if(strcmp(val, "all_products")){
+    allP = c(allP, calib_data$cpD1[i])
+  }
+}
+# Bind test1 and allProd cpD1 values by starting quantity
+calib_data = as.data.frame(cbind(startq, test1, allP))
+# Format starting quantity values as decimals, not scientific notation
+calib_data$startq = as.factor(format(calib_data$startq, scientific=FALSE))
+calib_data$startq = as.factor(calib_data$startq)
+# Append ratios to data set
+calib_data_8 = calib_data
+# Create month indicator column
+calib_data_8$month = strrep('aug', length(calib_data_8))
+calib_data_8
+
+# MONTH 3 (2018_11 / NOVEMBER) CALIBRATED DATA FRAME
+
+# Mac Directory
+setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_11")
+deriv.1<-read.csv(file = "2018_11_1_qPCR_Output.csv", header=FALSE)
+deriv.2<-read.csv(file = "2018_11_2_qPCR_Output.csv", header=FALSE)
+deriv_complete=as.data.frame(cbind(deriv.1, deriv.2))
+deriv = deriv_complete
+# Remove extra column 
+deriv = deriv[,-1]
+# Transpose derivatives to be in equivalent format as raw plate data
+deriv = as.data.frame(t(deriv), header=TRUE)
+# Rename columns
+colnames(deriv)=c("plateID", "reaction_type", "sampleID", "starting_quantity", "cpD1", "cpD2")
+### Removing NTC and gblock-Minus values ###
+# Indicate if sample is NTC (negative control)
+deriv['sampleID_NTC'] = grepl('NTC', deriv$sampleID)
+# Remove NTC samples, indicator (T/F) column, and cpD2 values
+ntc = which(deriv$sampleID_NTC)
+deriv = deriv[-ntc,]
+deriv = deriv[,-c(6,7)]
+# Indicate if sample is 'Plus' or 'Minus'
+deriv['sampleID_Minus'] = grepl('minus', deriv$sampleID)
+# Remove 'Minus' values (include only gblock+ values), and indicator (T/F) column
+minus = which(deriv$sampleID_Minus)
+# IF "minus" RETURNS EMPTY VALUES, COMMENT OUT COMMAND BELOW
+deriv = deriv[-minus,]
+deriv = deriv[,-6]
+# Remove two extra label rows from center of data frame
+deriv['label.row'] = grepl('3', deriv$starting_quantity)
+extra = which(deriv$label.row)
+deriv = deriv[-extra,]
+deriv = deriv[,-6]
+deriv$cpD1 = as.numeric(as.character(deriv$cpD1))
+# Remove unusual observations from initial data frame (CT value less than 10)
+deriv = deriv %>% filter(deriv$cpD1 >= 10)
+# Create/Write data frame for Calibrated values
+calib_data = deriv %>% filter(str_detect(sampleID, "g"))
+# Sort by starting quantity
+calib_data = calib_data[order(calib_data$starting_quantity),]
+calib_data$starting_quantity = as.numeric(as.character(calib_data$starting_quantity))
+calib_data$cpD1 = as.numeric(as.character(calib_data$cpD1))
+# Create empty vectors for for-loop to input cpD1 values
+test1 = c()
+allP = c()
+startq = c()
+# For loop -- iterating thru starting quantity and reaction type to return cpD1 values 
+for(i in 1:length(calib_data$starting_quantity)){
+  sq <- calib_data$starting_quantity[i]
+  if(i %% 6 == 1){
+    startq = c(startq,sq,sq,sq)
+  }
+  val <- toString(calib_data$reaction_type[i])
+  if(strcmp(val, "test1")){
+    test1 = c(test1, calib_data$cpD1[i])
+  }
+  if(strcmp(val, "all_products")){
+    allP = c(allP, calib_data$cpD1[i])
+  }
+}
+# Bind test1 and allProd cpD1 values by starting quantity
+calib_data = as.data.frame(cbind(startq, test1, allP))
+# Format starting quantity values as decimals, not scientific notation
+calib_data$startq=as.factor(format(calib_data$startq, scientific=FALSE))
+calib_data$startq=as.factor(calib_data$startq)
+# Append ratios to data set
+calib_data_11 = calib_data
+# Create month indicator column
+calib_data_11$month = strrep('nov', length(calib_data_11))
+calib_data_11
+
+# Combined Calib d.f. for all months
+calib_data = rbind(calib_data_6, calib_data_8, calib_data_11)
+
+# Create dummy varible columns for each month
+calib_data$june = ifelse(str_detect(calib_data[,4], "june"), 1, 0)
+calib_data$aug = ifelse(str_detect(calib_data[,4], "aug"), 1, 0)
+calib_data = calib_data[,-4]
+
+# Ordinal Logistic Regression Model 
+model = polr(as.factor(calib_data$startq) ~ ., data=calib_data, Hess = TRUE)
+
+(ctable <- coef(summary(model)))
+## calculate and store p values
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+options(scipen=999)
+## combined table
+(ctable <- cbind(ctable, "p value" = p))
+
+# Linear Model
+lin_model = lm(as.factor(calib_data$startq) ~ ., data=calib_data)
+lin_model
+
+
+
+
+
+# #### Month 1 (2018_6) CT ####
+# setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_6")
+# m11 = read.csv(file = "2018_6_1_qPCR_Output.csv", header=FALSE)
+# #Initial framing
+# m11 = m11[,-1]
+# # Transpose derivatives to be in equivalent format as raw plate data
+# m11 = as.data.frame(t(m11), header=FALSE)
+# m11 = m11[,-6]
+# # Rename columns
+# colnames(m11)=c("plateID", "reaction_type", "sampleID", "starting_quantity", "cpD1")
+# # Remove NTC, gblock_minus values
+# m11['sampleID_NTC'] = grepl('NTC', m11$sampleID)
+# ntc = which(m11$sampleID_NTC)
+# m11 = m11[-ntc,]
+# m11 = m11[,-6]
+# m11['sampleID_Minus'] = grepl('minus', m11$sampleID)
+# minus = which(m11$sampleID_Minus)
+# m11 = m11[-minus,]
+# m11 = m11[,-6]
+# m11$cpD1 = as.numeric(as.character(m11$cpD1))
+# # Remove CT vals <10
+# m11 = m11 %>% filter(m11$cpD1 >= 10)
+# # Create calibrated data frame
+# calib_data = m11 %>% filter(str_detect(sampleID, "g"))
+
+# 
+# #Month 2 (2018_8) CT
+# setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_8")
+# m21 = read.csv(file = "2018_8_1_qPCR_Output.csv", header=FALSE)
+# m21 = m21[,-1]
+# m22 = read.csv(file = "2018_8_2_qPCR_Output.csv", header=FALSE)
+# m22 = m22[,-1]
+# m23 = read.csv(file = "2018_8_3_qPCR_Output.csv", header=FALSE)
+# m23 = m23[,-1]
+# 
+# #Month 3 (2018_11) CT
+# setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_11")
+# m31 = read.csv(file = "2018_11_1_qPCR_Output.csv", header=FALSE)
+# m31 = m31[,-1]
+# m32 = read.csv(file = "2018_11_2_qPCR_Output.csv", header=FALSE)
+# m32 = m32[,-1]
+# 
+# #Combine months
+# month = data.frame(m11, m21, m22, m23, m31, m32)
+# month = as.data.frame(t(month))
+# month$june = ifelse(str_detect(month[,1], "2018_6"), 1, 0)
+# month$V1 = str_replace(month$V1, "2018_9", "2018_8")
+# month$aug = ifelse(str_detect(month[,1], "2018_8"), 1, 0)
+# 
+# #Remove CT<10, NTC, gblock_minus, V6 (CT2)
+# month$V5 = as.numeric(as.character(month$V5))
+# month$V6 = as.numeric(as.character(month$V6))
+# month = month %>% filter(month$V5 >= 10)
+# month = month %>% filter(month$V6 >= 10)
+# month['NTC'] = grepl('NTC', month$V3)
+# ntc = which(month$NTC)
+# month = month[-ntc,]
+# month = month[,-9]
+# month['Minus'] = grepl('minus', month$V3)
+# minus = which(month$Minus)
+# month = month[-minus,]
+# month = month[,-c(6,9)]
+
