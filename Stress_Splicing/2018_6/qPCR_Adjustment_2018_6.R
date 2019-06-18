@@ -227,6 +227,14 @@ newratios.calib = as.data.frame(cbind(newratiosvector, startqvector), stringsAsF
 
 #################### end combination ratios #####################
 
+### CONFUSTION MATRIX ###
+library(caret)
+numLlvs <- 4
+confusionMatrix(
+  factor(sample(rep(letters[1:numLlvs], 200), 50)),
+  factor(sample(rep(letters[1:numLlvs], 200), 50))) 
+
+
 ##########################################################
 ########## PROBABILITY MODEL - Calibrated Data ###########
 ##########################################################
@@ -321,8 +329,10 @@ exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
 # Calibrated data - s.q. vs. ratio
 plot(as.factor(newratios.calib$startqvector), as.numeric(newratios.calib$newratiosvector), xlab='Starting Quantity', ylab='Ratio', 
      main='2018_6 Calibrated Data - Starting Quantities vs. Ratios')
-plot(as.factor(newratios.calib$startqvector), as.numeric(newratios.calib$zscore), xlab='Starting Quantity', ylab='Ratio', 
-     main='2018_6 Calibrated Data - Starting Quantities vs. Ratios')
+
+
+# plot(as.factor(newratios.calib$startqvector), as.numeric(newratios.calib$zscore), xlab='Starting Quantity', ylab='Ratio', 
+#      main='2018_6 Calibrated Data - Starting Quantities vs. Ratios')
 # Histogram - calib allP vs. exp allP
 hist(calib_data$allP, xlim=c(0,40), ylim=c(0,100), col=rgb(1,0,0,0.5), main='2018_6 Histogram of All Products', xlab='All Products Derivative')
 hist(exp_data$allP.exp, xlim=c(0,40), ylim=c(0,100), add=T, col=rgb(0,0,1,0.5))
@@ -353,48 +363,33 @@ legend("topleft",
 
 
 #######################################
-####### 5-Fold Cross Validation #######
+####### k-Fold Cross Validation #######
 #######################################
+library(caret)
 
-n = length(calib_data[,1])
+
+n = length(newratios.calib[,1])
 set.seed(1)
 f <- 6
-folds <- rep_len(1:f, length.out = dim(calib_data)[1])
-folds <- sample(folds, size = dim(calib_data)[1], replace = F)
+folds <- rep_len(1:f, length.out = dim(newratios.calib)[1])
+folds <- sample(folds, size = dim(newratios.calib)[1], replace = F)
 table(folds)
 
-start.time <- Sys.time()
-OUT.GLM=NULL
-TRUTH = NULL; OUTPUT=NULL;
-for (k in 1:f) 
-{
-  test.ID <- which(folds == k)
-  train_set <- newratios.calib[-test.ID, ]
-  test_set <- newratios.calib[test.ID, ]
-  model.fit = polr(as.factor(newratios.calib$startqvector) ~ newratios.calib$zscore, Hess = TRUE)
-  olrm.pred = predict(model.fit, test_set$zscore, "probs")
-  olrm.class = ifelse (olrm.pred>0.5, 1,0)
-  table(olrm.class, test_set[,startqvector])
-  
-  TRUTH = c(TRUTH, test_set[,startqvector])
-  OUTPUT =c(OUTPUT, olrm.class)
-  Confusion.Table = table(TRUTH, OUTPUT)
-  print(Confusion.Table)
-  Overall.Accuracy = sum(diag(Confusion.Table))/sum(Confusion.Table)
-  print((Overall.Accuracy))
-  OUT.GLM =c(OUT.GLM, Overall.Accuracy)
+
+preds = NULL
+truth = NULL
+for (k in 1:f){
+  test.ID = which(folds == k)
+  train_y = newratios.calib[-test.ID, "startqvector"]
+  train_x = newratios.calib[-test.ID, "zscore"]
+  test_y = newratios.calib[test.ID, "startqvector"]
+  test_x = newratios.calib[test.ID, "zscore"]
+  truth = c(truth, test_y)
+  model.fit = polr(as.factor(train_y) ~ train_x, Hess = TRUE) 
+  preds = c(preds, predict(model.fit, test_x)) #need to fix s.t. results in 9 values rather than 45
 }
-print(OUT.GLM)
-mean(OUT.GLM) ##give the mean error for 5-fold CV 0.6269439
-sd(OUT.GLM) ##give the standard error for 5-fold CV 0.001727137
-end.time <- Sys.time()
-total.time <- end.time - start.time; total.time
 
-boxplot(OUT.GLM,col="orange")
-
-mean(TRUTH==OUTPUT)
-table(TRUTH,OUTPUT)
-
+confusionMatrix(preds,truth)
 
 
 ###### OLD CODE #######
