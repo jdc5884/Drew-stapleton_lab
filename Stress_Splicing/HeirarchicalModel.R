@@ -6,6 +6,7 @@ library(pracma)
 library(MASS)
 
 # MONTH 1 (2018_6 / JUNE) CALIBRATED DATA FRAME
+<<<<<<< HEAD
 
 # Mac Directory
 setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_6")
@@ -66,148 +67,22 @@ calib_data$startq=as.factor(calib_data$startq)
 calib_data_6 =calib_data
 # Create month indicator column
 calib_data_6$month = strrep('june', length(calib_data_6))
+=======
+calib_data_6 = read.csv("./2018_6/calib_2018_6.csv")[,-1]
+calib_data_6$month ='june'
+>>>>>>> 5f33e18e3fce60a5c0d91821babf3d5b9f6982a3
 calib_data_6
 
 # MONTH 2 (2018_8 / AUGUST) CALIBRATED DATA FRAME
-
-setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_8")
-deriv.1<-read.csv(file = "2018_8_1_qPCR_Output.csv", header=FALSE)
-deriv.2<-read.csv(file = "2018_8_2_qPCR_Output.csv", header=FALSE)
-deriv.3=read.csv(file = "2018_8_3_qPCR_Output.csv", header=FALSE)
-deriv_complete=as.data.frame(cbind(deriv.1, deriv.2, deriv.3))
-deriv = deriv_complete
-# Remove extra column 
-deriv = deriv[,-1]
-# Transpose derivatives to be in equivalent format as raw plate data
-deriv = as.data.frame(t(deriv), header=TRUE)
-# Rename columns
-colnames(deriv)=c("plateID", "reaction_type", "sampleID", "starting_quantity", "cpD1", "cpD2")
-# Indicate if sample is NTC (negative control)
-deriv['sampleID_NTC'] = grepl('NTC', deriv$sampleID)
-# Remove NTC samples, indicator (T/F) column, and cpD2 values
-ntc = which(deriv$sampleID_NTC)
-deriv = deriv[-ntc,]
-deriv = deriv[,-c(6,7)]
-# Indicate if sample is 'Plus' or 'Minus'
-deriv['sampleID_Minus'] = grepl('minus', deriv$sampleID)
-# Remove 'Minus' values (include only gblock+ values), and indicator (T/F) column
-minus = which(deriv$sampleID_Minus)
-# IF "minus" RETURNS EMPTY VALUES, COMMENT OUT COMMAND BELOW
-deriv = deriv[-minus,]
-deriv = deriv[,-6]
-# Remove two extra label rows from center of data frame
-deriv['label.row'] = grepl('3', deriv$starting_quantity)
-extra = which(deriv$label.row)
-deriv = deriv[-extra,]
-deriv = deriv[,-6]
-deriv$cpD1 = as.numeric(as.character(deriv$cpD1))
-# Remove unusual observations from initial data frame (CT value less than 10)
-deriv = deriv %>% filter(deriv$cpD1 >= 10)
-# Create data frame for Calibrated values
-calib_data = deriv %>% filter(str_detect(sampleID, "g"))
-# Sort by starting quantity
-calib_data = calib_data[order(calib_data$starting_quantity),]
-calib_data$starting_quantity = as.numeric(as.character(calib_data$starting_quantity))
-calib_data$cpD1 = as.numeric(as.character(calib_data$cpD1))
-# Create empty vectors for for-loop to input cpD1 values
-test1 = c()
-allP = c()
-startq = c()
-# For loop -- iterating thru starting quantity and reaction type to return cpD1 values 
-for(i in 1:length(calib_data$starting_quantity)){
-  sq <- calib_data$starting_quantity[i]
-  if(i %% 6 == 1){
-    startq = c(startq,sq,sq,sq)
-  }
-  val <- toString(calib_data$reaction_type[i])
-  if(strcmp(val, "test1")){
-    test1 = c(test1, calib_data$cpD1[i])
-  }
-  if(strcmp(val, "all_products")){
-    allP = c(allP, calib_data$cpD1[i])
-  }
-}
-# Bind test1 and allProd cpD1 values by starting quantity
-calib_data = as.data.frame(cbind(startq, test1, allP))
-# Format starting quantity values as decimals, not scientific notation
-calib_data$startq = as.factor(format(calib_data$startq, scientific=FALSE))
-calib_data$startq = as.factor(calib_data$startq)
-# Append ratios to data set
-calib_data_8 = calib_data
-# Create month indicator column
-calib_data_8$month = strrep('aug', length(calib_data_8))
+calib_data_8 = read.csv("./2018_8/calib_2018_8.csv")[,-1]
+calib_data_8$month ='aug'
 calib_data_8
 
 # MONTH 3 (2018_11 / NOVEMBER) CALIBRATED DATA FRAME
-
-# Mac Directory
-setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_11")
-deriv.1<-read.csv(file = "2018_11_1_qPCR_Output.csv", header=FALSE)
-deriv.2<-read.csv(file = "2018_11_2_qPCR_Output.csv", header=FALSE)
-deriv_complete=as.data.frame(cbind(deriv.1, deriv.2))
-deriv = deriv_complete
-# Remove extra column 
-deriv = deriv[,-1]
-# Transpose derivatives to be in equivalent format as raw plate data
-deriv = as.data.frame(t(deriv), header=TRUE)
-# Rename columns
-colnames(deriv)=c("plateID", "reaction_type", "sampleID", "starting_quantity", "cpD1", "cpD2")
-### Removing NTC and gblock-Minus values ###
-# Indicate if sample is NTC (negative control)
-deriv['sampleID_NTC'] = grepl('NTC', deriv$sampleID)
-# Remove NTC samples, indicator (T/F) column, and cpD2 values
-ntc = which(deriv$sampleID_NTC)
-deriv = deriv[-ntc,]
-deriv = deriv[,-c(6,7)]
-# Indicate if sample is 'Plus' or 'Minus'
-deriv['sampleID_Minus'] = grepl('minus', deriv$sampleID)
-# Remove 'Minus' values (include only gblock+ values), and indicator (T/F) column
-minus = which(deriv$sampleID_Minus)
-# IF "minus" RETURNS EMPTY VALUES, COMMENT OUT COMMAND BELOW
-deriv = deriv[-minus,]
-deriv = deriv[,-6]
-# Remove two extra label rows from center of data frame
-deriv['label.row'] = grepl('3', deriv$starting_quantity)
-extra = which(deriv$label.row)
-deriv = deriv[-extra,]
-deriv = deriv[,-6]
-deriv$cpD1 = as.numeric(as.character(deriv$cpD1))
-# Remove unusual observations from initial data frame (CT value less than 10)
-deriv = deriv %>% filter(deriv$cpD1 >= 10)
-# Create/Write data frame for Calibrated values
-calib_data = deriv %>% filter(str_detect(sampleID, "g"))
-# Sort by starting quantity
-calib_data = calib_data[order(calib_data$starting_quantity),]
-calib_data$starting_quantity = as.numeric(as.character(calib_data$starting_quantity))
-calib_data$cpD1 = as.numeric(as.character(calib_data$cpD1))
-# Create empty vectors for for-loop to input cpD1 values
-test1 = c()
-allP = c()
-startq = c()
-# For loop -- iterating thru starting quantity and reaction type to return cpD1 values 
-for(i in 1:length(calib_data$starting_quantity)){
-  sq <- calib_data$starting_quantity[i]
-  if(i %% 6 == 1){
-    startq = c(startq,sq,sq,sq)
-  }
-  val <- toString(calib_data$reaction_type[i])
-  if(strcmp(val, "test1")){
-    test1 = c(test1, calib_data$cpD1[i])
-  }
-  if(strcmp(val, "all_products")){
-    allP = c(allP, calib_data$cpD1[i])
-  }
-}
-# Bind test1 and allProd cpD1 values by starting quantity
-calib_data = as.data.frame(cbind(startq, test1, allP))
-# Format starting quantity values as decimals, not scientific notation
-calib_data$startq=as.factor(format(calib_data$startq, scientific=FALSE))
-calib_data$startq=as.factor(calib_data$startq)
-# Append ratios to data set
-calib_data_11 = calib_data
-# Create month indicator column
-calib_data_11$month = strrep('nov', length(calib_data_11))
+calib_data_11 = read.csv("./2018_11/calib_2018_11.csv")[,-1]
+calib_data_11$month ='nov'
 calib_data_11
+
 
 # Combined Calib d.f. for all months
 calib_data = rbind(calib_data_6, calib_data_8, calib_data_11)
