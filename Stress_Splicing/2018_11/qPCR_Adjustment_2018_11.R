@@ -214,24 +214,27 @@ newratios.calib = as.data.frame(cbind(newratiosvector, startqvector), stringsAsF
 
 ### COMPLETED COMBINATION RATIOS ###
 
+### CONFUSTION MATRIX ###
+library(caret)
+numLlvs <- 4
+confusionMatrix(
+  factor(sample(rep(letters[1:numLlvs], 200), 50)),
+  factor(sample(rep(letters[1:numLlvs], 200), 50))) 
+
 
 ##########################################################
 ########## PROBABILITY MODEL - Calibrated Data ###########
 ##########################################################
 
-# Calculate z-score for calibrated data
-zscore = (calib_data$ratio - mean(calib_data$ratio))/sd(calib_data$ratio)
-# Predict calibrated data ratios using experimental data
-pred.ratio = zscore*sd(ratio.exp)+mean(ratio.exp)
-# Append y (predicted calibrated ratios) to calibrated data frame -- CALIBRATED RATIOS IN TERMS OF EXPERIMENTAL PARAMETERS
-calib_data = cbind(calib_data, pred.ratio) 
-# Create empty vectors for for-loop input
+##### Finding the average adjusted test 1 #########
+#(this section should be able to be calculated independent of new ratio values)
+# Create empty vectors for for-loop input 
 calib_data$test1 = as.numeric(as.character(calib_data$test1))
 calib_data$allP = as.numeric(as.character(calib_data$allP))
 adj_val = c()
 allP = c()
 startq = c()
-ratio =calib_data$allP/calib_data$test1
+calib_data$ratio =calib_data$allP/calib_data$test1
 # Itterating through each set of (3) observations performing U-Stats on each set of inputs
 for (i in 1:(nrow(calib_data)/3)){
   t_x <- c(calib_data$allP[3*i - 2], calib_data$allP[3*i - 1], calib_data$allP[3*i])
@@ -241,14 +244,15 @@ for (i in 1:(nrow(calib_data)/3)){
 }
 adjusted_test1 <- test1 + adj_val
 # Append adjusted test1 values and adjustment value to data set
-calib_data=cbind(calib_data,adjusted_test1,adj_val)
+calib_data=as.data.frame(cbind.fill(calib_data,adjusted_test1,adj_val, fill=NA))
+colnames(calib_data)[5:6] = c("adjusted_test1", "adj_val")
 # Write Calibrated Data CSV --> Used in "qPCR_Plotting" code for visuals
 #write.csv(file="YEAR_MONTH_Calibrated_DF", calib_data)
 
 # Adjustment: allP - test1 -- Using in model to multiply probability matrix by
 calib_data$diff = calib_data$allP - calib_data$adjusted_test1
 
-# CREATE DATA FRAME WITH ONLY S.Q. AND ADJUSTMENT VAL
+## CREATE DATA FRAME WITH ONLY S.Q. AND ADJUSTMENT VAL ##
 calib_adj = calib_data[,c(1,6)]
 
 average <- function(col1){
@@ -271,24 +275,42 @@ calib_adj = as.data.frame(unique(cbind(as.character(calib_data$startq), adj.test
 calib_adj$adj.test1.avg = as.numeric(as.character(calib_adj$adj.test1.avg))
 # Rename columns
 colnames(calib_adj)=c("startq", "adj.test1.avg")
+#############################################
+
+##### Creating the components of the ORLM ######
+# Calculate z-score for calibrated data
+zscore = (newratiosvector - mean(newratiosvector))/sd(newratiosvector)
+newratios.calib$zscore = zscore
+# Predict calibrated data ratios using experimental data
+pred.ratio = zscore*sd(ratio.exp)+mean(ratio.exp) #why do we need this???
+newratios.calib$pred.ratio = pred.ratio
+# Append y (predicted calibrated ratios) to calibrated data frame -- CALIBRATED RATIOS IN TERMS OF EXPERIMENTAL PARAMETERS
+#no way of knowing if the pred.ratio and the correct starting quantities are lining up correctly #
+#calib_data = cbind(calib_data,newratiosvector, pred.ratio) 
 
 # Ordinal Logistic Regression Model - starting quantity as response to calibrated z-score
-model = polr(as.factor(calib_data$startq) ~ zscore, Hess = TRUE)
+model = polr(as.factor(newratios.calib$startqvector) ~ newratios.calib$pred.ratio, Hess = TRUE)
+# should the model be based off of the relation between startq and pred.ratio or zscore?
+model = polr(as.factor(newratios.calib$startqvector) ~ newratios.calib$zscore, Hess = TRUE)
 summary(model)
+(ctable <- coef(summary(model)))
+## calculate and store p values
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+options(scipen=999)
+## combined table
+(ctable <- cbind(ctable, "p value" = p))
+#############################################
 
 # Calculate experimental data z-score
 zscore = (exp_data$ratio.exp - mean(exp_data$ratio.exp))/sd(exp_data$ratio.exp)
 prob.matrix = predict(model, zscore, type='p')
 
-# 
+# Apply probability matrix to the adjusted test 1 averages
 apply(prob.matrix, 1, function(x) x*calib_adj$adj.test1.avg)
 exp_data$exp.adjust = colSums(apply(prob.matrix, 1, function(x) x*calib_adj$adj.test1.avg))
 
 # Create new column with stress product (VQTL input)
 exp_data$stress = exp_data$allP.exp - exp_data$exp.adjust
-
-# 
-
 
 ###PLOTS###
 # Calibrated data - s.q. vs. ratio
