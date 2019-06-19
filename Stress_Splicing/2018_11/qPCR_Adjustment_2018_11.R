@@ -166,7 +166,6 @@ for(i in 1:length(exp_data$sampleID)){
 exp_data = as.data.frame(cbind(sampleID.exp, test1.exp, allP.exp))
 exp_data$test1.exp = as.numeric(as.character(exp_data$test1.exp))
 exp_data$allP.exp = as.numeric(as.character(exp_data$allP.exp))
-exp_data$ratio.exp = allP.exp/test1.exp
 write.csv(exp_data, file = "exp_2018_11.csv")
 ### COMPLETED EXPERIMENTAL DATA FRAME ###
 
@@ -207,8 +206,16 @@ newratios.calib = newratios.calib[-1,]
 newratiosvector = as.numeric(as.vector(as.matrix.data.frame(newratios.calib)))
 startqvector = sort(rep(unique(startquan), length(newratios.calib$`0.01`)))
 newratios.calib = as.data.frame(cbind(newratiosvector, startqvector), stringsAsFactors = FALSE)
-newratios.calib = na.omit(newratios.calib)
+
 #################### end combination ratios #####################
+
+### CONFUSTION MATRIX ###
+library(caret)
+numLlvs <- 4
+confusionMatrix(
+  factor(sample(rep(letters[1:numLlvs], 200), 50)),
+  factor(sample(rep(letters[1:numLlvs], 200), 50))) 
+
 
 ##########################################################
 ########## PROBABILITY MODEL - Calibrated Data ###########
@@ -309,15 +316,18 @@ colnames(calib_adj)=c("startq", "adj.test1.avg")
 ##### Creating the components of the ORLM ######
 # Calculate z-score for calibrated data
 newratiosvector = na.omit(newratiosvector)
-
 zscore = (newratiosvector - mean(newratiosvector))/sd(newratiosvector)
 newratios.calib$zscore = zscore
-
+# Predict calibrated data ratios using experimental data
+pred.ratio = zscore*sd(ratio.exp)+mean(ratio.exp) #why do we need this???
+newratios.calib$pred.ratio = pred.ratio
 # Append y (predicted calibrated ratios) to calibrated data frame -- CALIBRATED RATIOS IN TERMS OF EXPERIMENTAL PARAMETERS
 #no way of knowing if the pred.ratio and the correct starting quantities are lining up correctly #
 #calib_data = cbind(calib_data,newratiosvector, pred.ratio) 
 
 # Ordinal Logistic Regression Model - starting quantity as response to calibrated z-score
+model = polr(as.factor(newratios.calib$startqvector) ~ newratios.calib$pred.ratio, Hess = TRUE)
+# should the model be based off of the relation between startq and pred.ratio or zscore?
 model = polr(as.factor(newratios.calib$startqvector) ~ newratios.calib$zscore, Hess = TRUE)
 summary(model)
 (ctable <- coef(summary(model)))
