@@ -97,42 +97,29 @@ unusual_obs_2018_11 = reaction %>% filter(reaction$cpD1 < 10)
 ########################################################## 
 ################# Calibrated Data Framing ################
 ########################################################## 
-
+library("rowr")
 # Create/Write data frame for Calibrated values
 calib_data = deriv %>% filter(str_detect(sampleID, "g"))
 # Sort by starting quantity
 calib_data = calib_data[order(calib_data$starting_quantity),]
+
 calib_data$starting_quantity = as.numeric(as.character(calib_data$starting_quantity))
 calib_data$cpD1 = as.numeric(as.character(calib_data$cpD1))
-# Create empty vectors for for-loop to input cpD1 values
-test1 = c()
-allP = c()
-startq = c()
-# For loop -- iterating thru starting quantity and reaction type to return cpD1 values 
-for(i in 1:length(calib_data$starting_quantity)){
-  sq <- calib_data$starting_quantity[i]
-  if(i %% 6 == 1){
-    startq = c(startq,sq,sq,sq)
-  }
-  val <- toString(calib_data$reaction_type[i])
-  if(strcmp(val, "test1")){
-    test1 = c(test1, calib_data$cpD1[i])
-  }
-  if(strcmp(val, "all_products")){
-    allP = c(allP, calib_data$cpD1[i])
-  }
-}
-# Bind test1 and allProd cpD1 values by starting quantity
-calib_data = as.data.frame(cbind(startq, test1, allP))
+
+
+test1 = filter(calib_data, reaction_type=="test1")[,5]
+allP = filter(calib_data, reaction_type=="all_products")[,4:5]
+calib_data = as.data.frame(cbind.fill(allP, test1, fill = NA))
+colnames(calib_data) = c("startq", 'allP', "test1")
+
 # Format starting quantity values as decimals, not scientific notation
 calib_data$startq=as.factor(format(calib_data$startq, scientific=FALSE))
 calib_data$startq=as.factor(calib_data$startq)
-# Calculate ratio of allP/test1 --> PAIRWISE RATIOS -- INPUT FOR OLR MODEL
-ratio = calib_data$allP/calib_data$test1
-# Append ratios to data set
-calib_data = cbind(calib_data, ratio)
+write.csv(calib_data, file = "calib_2018_11.csv")
+
 
 ### COMPLETED CALIBRATED DATA FRAME ###
+
 
 ########################################################## 
 ############### Experimental Data Framing ################
@@ -142,14 +129,14 @@ calib_data = cbind(calib_data, ratio)
 exp_data = deriv %>% filter(str_detect(sampleID, "g")==FALSE)
 # Sort by starting quantity
 exp_data = exp_data[order(exp_data$starting_quantity),]
-# Remove first and last rows (unnecessary labeling)
-exp_data = exp_data[-1,]
-exp_data = exp_data[-nrow(exp_data),]
+# # Remove first and last rows (unnecessary labeling)
+# exp_data = exp_data[-1,]
+# exp_data = exp_data[-nrow(exp_data),]
 exp_data$cpD1 = as.numeric(as.character(exp_data$cpD1))
 # Order data by sampleID
 exp_data = exp_data[order(exp_data$sampleID),]
 ### Finding invalid observations ###
-# Find counts of each unique sampleID; for sample with a count not equal to 2, remove from data frame
+# Find invalid observations - Find counts of each unique sampleID; remove ones with count not equal to 2 from data frame
 counts = as.data.frame(table(exp_data$sampleID))
 countsne2 = as.data.frame(filter(counts, !counts$Freq==2))
 countsne2$Var1 = as.numeric(as.character(countsne2$Var1)) 
@@ -177,15 +164,9 @@ for(i in 1:length(exp_data$sampleID)){
 exp_data = as.data.frame(cbind(sampleID.exp, test1.exp, allP.exp))
 exp_data$test1.exp = as.numeric(as.character(exp_data$test1.exp))
 exp_data$allP.exp = as.numeric(as.character(exp_data$allP.exp))
-# Calculate ratios for experimental data 
-ratio.exp = exp_data$allP.exp/exp_data$test1.exp
-# Append ratios to data set
-exp_data = cbind(exp_data, ratio.exp)
-
-# Write Experimental Data CSV --> Used in "qPCR_Plotting" code for visuals
-#write.csv(file="YEAR_MONTH_Experimental_DF", exp_data)
-
+write.csv(exp_data, file = "exp_2018_11.csv")
 ### COMPLETED EXPERIMENTAL DATA FRAME ###
+
 
 ##########################################################
 ############### Combination Ratios for qPCR ##############
