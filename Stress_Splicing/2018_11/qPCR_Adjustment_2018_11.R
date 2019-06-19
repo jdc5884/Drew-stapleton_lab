@@ -109,6 +109,7 @@ calib_data$cpD1 = as.numeric(as.character(calib_data$cpD1))
 
 test1 = filter(calib_data, reaction_type=="test1")[,5]
 allP = filter(calib_data, reaction_type=="all_products")[,4:5]
+#Combine test1 and allP obs, with NA in blank cells
 calib_data = as.data.frame(cbind.fill(allP, test1, fill = NA))
 colnames(calib_data) = c("startq", 'allP', "test1")
 
@@ -142,6 +143,7 @@ countsne2 = as.data.frame(filter(counts, !counts$Freq==2))
 countsne2$Var1 = as.numeric(as.character(countsne2$Var1)) 
 # Remove observations with count not equal to 2 from data set
 exp_data = exp_data[!exp_data$sampleID %in% countsne2$Var1,]
+
 # Create empty vectors for for-loop to input cpD1 values
 test1.exp = c()
 allP.exp = c()
@@ -178,6 +180,7 @@ t1 = calib_data$test1
 dat = data.frame(cbind(startquan,allprod,t1), stringsAsFactors = FALSE)
 dat$allprod = as.numeric(dat$allprod)
 dat$t1 = as.numeric(dat$t1)
+
 #Create divide funtion - every element in column 1 divided by every element in column 2
 divide <- function(col1, col2){
   ratio = NULL;
@@ -204,15 +207,7 @@ newratiosvector = as.numeric(as.vector(as.matrix.data.frame(newratios.calib)))
 startqvector = sort(rep(unique(startquan), length(newratios.calib$`0.01`)))
 newratios.calib = as.data.frame(cbind(newratiosvector, startqvector), stringsAsFactors = FALSE)
 
-# # Duplicate newratios.calib data frame, transpose for boxplot visualizations at each s.q.
-# newratios.calib.boxplot = as.data.frame(t(newratios.calib))
-# colnames(newratios.calib.boxplot) = c("0.01", "0.05", "0.10", "0.50", "1.00", "50.00")
-# newratios.calib.boxplot = newratios.calib.boxplot[-1,]
-# newratiosvector = as.vector(as.matrix.data.frame(newratios.calib.boxplot))
-# startqvector = sort(rep(unique(startquan), length(newratios.calib.boxplot$`0.01`)))
-# newratios.calib.boxplot = as.data.frame(cbind(newratiosvector, startqvector))
-
-### COMPLETED COMBINATION RATIOS ###
+#################### end combination ratios #####################
 
 ### CONFUSTION MATRIX ###
 library(caret)
@@ -226,35 +221,25 @@ confusionMatrix(
 ########## PROBABILITY MODEL - Calibrated Data ###########
 ##########################################################
 
-##### Finding the average adjusted test 1 #########
-#(this section should be able to be calculated independent of new ratio values)
-# Create empty vectors for for-loop input 
-calib_data$test1 = as.numeric(as.character(calib_data$test1))
-calib_data$allP = as.numeric(as.character(calib_data$allP))
-adj_val = c()
-allP = c()
-startq = c()
-calib_data$ratio =calib_data$allP/calib_data$test1
-# Itterating through each set of (3) observations performing U-Stats on each set of inputs
-for (i in 1:(nrow(calib_data)/3)){
-  t_x <- c(calib_data$allP[3*i - 2], calib_data$allP[3*i - 1], calib_data$allP[3*i])
-  t_y <- c(calib_data$test1[3*i - 2], calib_data$test1[3*i - 1], calib_data$test1[3*i])
-  adj <- mean(outer(t_x, t_y, "-"))
-  adj_val <- c(adj_val, adj, adj, adj)
+##finding ajustment value##
+group = split.data.frame(calib_data, calib_data$startq)
+
+adj <- function(AllP, Test1){
+  adjust = ave(AllP)-ave(Test1)
+  return(adjust)
 }
-adjusted_test1 <- test1 + adj_val
-# Append adjusted test1 values and adjustment value to data set
-calib_data=as.data.frame(cbind.fill(calib_data,adjusted_test1,adj_val, fill=NA))
-colnames(calib_data)[5:6] = c("adjusted_test1", "adj_val")
-# Write Calibrated Data CSV --> Used in "qPCR_Plotting" code for visuals
-#write.csv(file="YEAR_MONTH_Calibrated_DF", calib_data)
 
-# Adjustment: allP - test1 -- Using in model to multiply probability matrix by
-calib_data$diff = calib_data$allP - calib_data$adjusted_test1
+adjval = NULL
+for (k in group){
+  adjval = c(adjval,adj(k$allP, k$test1))
+}
 
-## CREATE DATA FRAME WITH ONLY S.Q. AND ADJUSTMENT VAL ##
-calib_adj = calib_data[,c(1,6)]
+calib_data$adjval = adjval
+calib_data$adjusted_test1 = calib_data$test1 + adjval
 
+##### Finding the average adjusted test 1 #########
+
+#average function takes the mean of each 
 average <- function(col1){
   avg = NULL;
   for (i in col1){
@@ -262,8 +247,8 @@ average <- function(col1){
   }
   return(avg)
 }
-#Subset data by starting quantity
-group = split.data.frame(calib_adj, calib_adj$startq)
+##Subset data by starting quantity
+group = split.data.frame(calib_data, calib_data$startq)
 
 adj.test1.avg = NULL;
 for (k in group){
@@ -271,11 +256,62 @@ for (k in group){
 }
 print(adj.test1.avg)
 
-calib_adj = as.data.frame(unique(cbind(as.character(calib_data$startq), adj.test1.avg)))
-calib_adj$adj.test1.avg = as.numeric(as.character(calib_adj$adj.test1.avg))
+calib_adj = unique(as.data.frame(cbind(as.numeric(as.character(calib_data$startq)), adj.test1.avg)))
+
 # Rename columns
 colnames(calib_adj)=c("startq", "adj.test1.avg")
 #############################################
+
+# ##### Finding the average adjusted test 1 #########
+# #(this section should be able to be calculated independent of new ratio values)
+# # Create empty vectors for for-loop input 
+# calib_data$test1 = as.numeric(as.character(calib_data$test1))
+# calib_data$allP = as.numeric(as.character(calib_data$allP))
+# adj_val = c()
+# allP = c()
+# startq = c()
+# calib_data$ratio =calib_data$allP/calib_data$test1
+# # Itterating through each set of (3) observations performing U-Stats on each set of inputs
+# for (i in 1:(nrow(calib_data)/3)){
+#   t_x <- c(calib_data$allP[3*i - 2], calib_data$allP[3*i - 1], calib_data$allP[3*i])
+#   t_y <- c(calib_data$test1[3*i - 2], calib_data$test1[3*i - 1], calib_data$test1[3*i])
+#   adj <- mean(outer(t_x, t_y, "-"))
+#   adj_val <- c(adj_val, adj, adj, adj)
+# }
+# adjusted_test1 <- test1 + adj_val
+# # Append adjusted test1 values and adjustment value to data set
+# calib_data=as.data.frame(cbind.fill(calib_data,adjusted_test1,adj_val, fill=NA))
+# colnames(calib_data)[5:6] = c("adjusted_test1", "adj_val")
+# # Write Calibrated Data CSV --> Used in "qPCR_Plotting" code for visuals
+# #write.csv(file="YEAR_MONTH_Calibrated_DF", calib_data)
+# 
+# # Adjustment: allP - test1 -- Using in model to multiply probability matrix by
+# calib_data$diff = calib_data$allP - calib_data$adjusted_test1
+# 
+# ## CREATE DATA FRAME WITH ONLY S.Q. AND ADJUSTMENT VAL ##
+# calib_adj = calib_data[,c(1,6)]
+# 
+# average <- function(col1){
+#   avg = NULL;
+#   for (i in col1){
+#     avg = c(avg,mean(col1))
+#   }
+#   return(avg)
+# }
+# #Subset data by starting quantity
+# group = split.data.frame(calib_adj, calib_adj$startq)
+# 
+# adj.test1.avg = NULL;
+# for (k in group){
+#   adj.test1.avg = c(adj.test1.avg, average(k$adjusted_test1))
+# }
+# print(adj.test1.avg)
+# 
+# calib_adj = as.data.frame(unique(cbind(as.character(calib_data$startq), adj.test1.avg)))
+# calib_adj$adj.test1.avg = as.numeric(as.character(calib_adj$adj.test1.avg))
+# # Rename columns
+# colnames(calib_adj)=c("startq", "adj.test1.avg")
+# #############################################
 
 ##### Creating the components of the ORLM ######
 # Calculate z-score for calibrated data

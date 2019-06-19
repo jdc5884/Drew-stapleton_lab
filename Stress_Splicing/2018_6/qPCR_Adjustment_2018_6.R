@@ -135,14 +135,6 @@ counts = as.data.frame(table(exp_data$sampleID))
 countsne2 = as.data.frame(filter(counts, !counts$Freq==2))
 # Remove invalid observations from data set
 exp_data = exp_data[!exp_data$sampleID %in% countsne2$Var1,]
-### Report invalid observations ###
-# Send CSV of removed sampleID's to Dr. S (invalid obs), with additional plots of raw cycle values for invalid obs
-# Write CSV file to send Dr. S for investigation
-### WORK ON --> add derivative values in to the CSV file
-### WORK ON --> creating a separate CSV file with samples with unusual derivatives
-#write.csv(file="2018_11_SamplesToInvestigate", countsne2)
-#write.csv(file="YEAR_MONTH_SamplesToInvestigate", countsne2)
-
 
 # Create empty vectors for for-loop to input cpD1 values
 test1.exp = c()
@@ -174,13 +166,10 @@ write.csv(exp_data, file = "exp_2018_6.csv")
 ############### Combination Ratios for qPCR ##############
 ##########################################################
 
-## NOT FOR USE IN CAPSTONE -- USE IN COMPARISON LATER ##
-
 startquan = as.character(calib_data$startq)
 allprod = calib_data$allP
 t1 = calib_data$test1
 dat = data.frame(cbind(startquan,allprod,t1), stringsAsFactors = FALSE)
-
 dat$allprod = as.numeric(dat$allprod)
 dat$t1 = as.numeric(dat$t1)
 
