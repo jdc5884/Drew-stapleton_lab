@@ -103,6 +103,7 @@ calib_data$cpD1 = as.numeric(as.character(calib_data$cpD1))
 
 test1 = filter(calib_data, reaction_type=="test1")[,5]
 allP = filter(calib_data, reaction_type=="all_products")[,4:5]
+#Combine test1 and allP obs, with NA in blank cells
 calib_data = as.data.frame(cbind.fill(allP, test1, fill = NA))
 colnames(calib_data) = c("startq", 'allP', "test1")
 
@@ -231,7 +232,7 @@ calib_data$allP = as.numeric(as.character(calib_data$allP))
 adj_val = c()
 allP = c()
 startq = c()
-ratio =calib_data$allP/calib_data$test1
+calib_data$ratio =calib_data$allP/calib_data$test1
 # Itterating through each set of (3) observations performing U-Stats on each set of inputs
 for (i in 1:(nrow(calib_data)/3)){
   t_x <- c(calib_data$allP[3*i - 2], calib_data$allP[3*i - 1], calib_data$allP[3*i])
@@ -241,7 +242,8 @@ for (i in 1:(nrow(calib_data)/3)){
  }
 adjusted_test1 <- test1 + adj_val
 # Append adjusted test1 values and adjustment value to data set
-calib_data=cbind(calib_data,adjusted_test1,adj_val)
+calib_data=as.data.frame(cbind.fill(calib_data,adjusted_test1,adj_val, fill=NA))
+colnames(calib_data)[5:6] = c("adjusted_test1", "adj_val")
 # Write Calibrated Data CSV --> Used in "qPCR_Plotting" code for visuals
 #write.csv(file="YEAR_MONTH_Calibrated_DF", calib_data)
  
