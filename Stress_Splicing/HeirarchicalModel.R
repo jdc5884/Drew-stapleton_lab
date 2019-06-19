@@ -3,6 +3,7 @@
 library(stringr)
 library(dplyr)
 library(pracma)
+library(MASS)
 
 # MONTH 1 (2018_6 / JUNE) CALIBRATED DATA FRAME
 
@@ -14,8 +15,6 @@ deriv = deriv_complete
 deriv = deriv[,-1]
 # Transpose derivatives to be in equivalent format as raw plate data
 deriv = as.data.frame(t(deriv), header=FALSE)
-# Remove blank column (4th)
-#deriv = deriv[,-5]
 # Rename columns
 colnames(deriv)=c("plateID", "reaction_type", "sampleID", "starting_quantity", "cpD1", "cpD2")
 ### Removing NTC and gblock-Minus values ###
@@ -220,7 +219,7 @@ calib_data = calib_data[,-4]
 
 # Ordinal Logistic Regression Model 
 model = polr(as.factor(calib_data$startq) ~ ., data=calib_data, Hess = TRUE)
-
+(summary(model))
 (ctable <- coef(summary(model)))
 ## calculate and store p values
 p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
@@ -231,8 +230,6 @@ options(scipen=999)
 # Linear Model
 lin_model = lm(as.factor(calib_data$startq) ~ ., data=calib_data)
 lin_model
-
-
 
 
 
