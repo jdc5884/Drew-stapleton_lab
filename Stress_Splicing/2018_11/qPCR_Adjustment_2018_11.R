@@ -196,81 +196,23 @@ for (k in group){
 # Create data frame with unique ratios at each starting quantity
 startqvalues = rep(unique(startquan), rep(length(unique(startquan)),length(unique(startquan)))) 
 newratios.calib = data.frame(rbind(unique(startqvalues), combratio), stringsAsFactors = FALSE)
-newratios.calib = t(newratios.calib)
+# Duplicate newratios.calib data frame
 newratios.calib = as.data.frame(newratios.calib)
-newratios.calib$combratio = as.numeric(newratios.calib$combratio)
-newratios.calib$startqvalues = as.numeric(newratios.calib$startqvalues)
+colnames(newratios.calib) = c("0.005", "0.01", "0.05", "0.10", "0.5", "1.00", "5.00")
+newratios.calib = newratios.calib[-1,]
+newratiosvector = as.numeric(as.vector(as.matrix.data.frame(newratios.calib)))
+startqvector = sort(rep(unique(startquan), length(newratios.calib$`0.01`)))
+newratios.calib = as.data.frame(cbind(newratiosvector, startqvector), stringsAsFactors = FALSE)
 
-# Duplicate newratios.calib data frame, transpose for boxplot visualizations at each s.q.
-newratios.calib.boxplot = as.data.frame(t(newratios.calib))
-colnames(newratios.calib.boxplot) = c("0.01", "0.05", "0.10", "0.50", "1.00", "50.00")
-newratios.calib.boxplot = newratios.calib.boxplot[-1,]
-newratiosvector = as.vector(as.matrix.data.frame(newratios.calib.boxplot))
-startqvector = sort(rep(unique(startquan), length(newratios.calib.boxplot$`0.01`)))
-newratios.calib.boxplot = as.data.frame(cbind(newratiosvector, startqvector))
+# # Duplicate newratios.calib data frame, transpose for boxplot visualizations at each s.q.
+# newratios.calib.boxplot = as.data.frame(t(newratios.calib))
+# colnames(newratios.calib.boxplot) = c("0.01", "0.05", "0.10", "0.50", "1.00", "50.00")
+# newratios.calib.boxplot = newratios.calib.boxplot[-1,]
+# newratiosvector = as.vector(as.matrix.data.frame(newratios.calib.boxplot))
+# startqvector = sort(rep(unique(startquan), length(newratios.calib.boxplot$`0.01`)))
+# newratios.calib.boxplot = as.data.frame(cbind(newratiosvector, startqvector))
 
 ### COMPLETED COMBINATION RATIOS ###
-
-###### IDENTIFY / REMOVE OUTLIERS -- GRUBBS TEST ######
-
-# library(sos)
-# library(outliers)
-# ratios <- newratios.calib.boxplot$newratiosvector
-# ratios <- as.numeric (newratios.calib.boxplot$newratiosvector)
-# grubbs.test(ratios)
-# outliers = as.data.frame(ratios)
-
-# library(outliers)
-# library(ggplot2)
-# X = newratios.calib.boxplot$newratiosvector
-# grubbs.flag <- function(x) {
-#   outliers <- NULL
-#   test <- x
-#   grubbs.result <- grubbs.test(test)
-#   pv <- grubbs.result$p.value
-#   while(pv < 0.05) {
-#     outliers <- c(outliers,as.numeric(strsplit(grubbs.result$alternative," ")[[1]][3]))
-#     test <- x[!x %in% outliers]
-#     grubbs.result <- grubbs.test(test)
-#     pv <- grubbs.result$p.value
-#   }
-#   return(data.frame(X=x,Outlier=(x %in% outliers)))
-# }
-# X = as.data.frame(X)
-#_______________________________#
-
-### RANDOM FOREST TEST ###
-
-# Create data frame with s.q. and ratio columns from calib data
-library(randomForest)
-data = calib_data[,c(1,4)]
-set.seed(5)  #predValid values change with different seeds...
-train <- sample(nrow(data), 0.7*nrow(data), replace = FALSE) #Significantly different results depending on how large training set (decreasing train set ==> higher accuracy?)
-TrainSet <- data[train,]
-ValidSet <- data[-train,]
-summary(TrainSet)
-# Create a Random Forest model with default parameters
-model1 <- randomForest(startq ~ ratio, data = TrainSet, importance = TRUE)
-# Fine tuning parameters of Random Forest model
-model2 <- randomForest(startq ~ ratio, data = TrainSet, ntree = 500, mtry = 1, importance = TRUE)
-# Predicting on train set
-predTrain <- predict(model2, TrainSet, type = "class")
-# Checking classification accuracy -- should return same trained values
-table(predTrain, TrainSet$startq)  
-# Predicting on Validation set
-predValid <- predict(model2, ValidSet, type = "class")
-# Checking classification accuracy
-mean(predValid == ValidSet$startq)                    
-table(predValid,ValidSet$startq)
-# # Using For loop to identify the right mtry for model
-# a=c()
-# i=5
-# for (i in 3:8) {
-#   model3 <- randomForest(ratio ~ ., data = TrainSet, ntree = 500, mtry = i, importance = TRUE)
-#   predValid <- predict(model3, ValidSet, type = "class")
-#   a[i-2] = mean(predValid == ValidSet$ratio)
-# }
-# a
 
 
 ##########################################################
