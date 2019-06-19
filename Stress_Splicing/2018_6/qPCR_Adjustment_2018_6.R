@@ -224,35 +224,25 @@ confusionMatrix(
 ########## PROBABILITY MODEL - Calibrated Data ###########
 ##########################################################
 
+##finding ajustment value##
+group = split.data.frame(calib_data, calib_data$startq)
+
+adj <- function(AllP, Test1){
+  adjust = ave(AllP)-ave(Test1)
+  return(adjust)
+}
+
+adjval = NULL
+for (k in group){
+  adjval = c(adjval,adj(k$allP, k$test1))
+}
+
+calib_data$adjval = adjval
+calib_data$adjusted_test1 = calib_data$test1 + adjval
+
 ##### Finding the average adjusted test 1 #########
-#(this section should be able to be calculated independent of new ratio values)
-# Create empty vectors for for-loop input 
-calib_data$test1 = as.numeric(as.character(calib_data$test1))
-calib_data$allP = as.numeric(as.character(calib_data$allP))
-adj_val = c()
-allP = c()
-startq = c()
-calib_data$ratio =calib_data$allP/calib_data$test1
-# Itterating through each set of (3) observations performing U-Stats on each set of inputs
-for (i in 1:(nrow(calib_data)/3)){
-  t_x <- c(calib_data$allP[3*i - 2], calib_data$allP[3*i - 1], calib_data$allP[3*i])
-  t_y <- c(calib_data$test1[3*i - 2], calib_data$test1[3*i - 1], calib_data$test1[3*i])
-  adj <- mean(outer(t_x, t_y, "-"))
-  adj_val <- c(adj_val, adj, adj, adj)
- }
-adjusted_test1 <- test1 + adj_val
-# Append adjusted test1 values and adjustment value to data set
-calib_data=as.data.frame(cbind.fill(calib_data,adjusted_test1,adj_val, fill=NA))
-colnames(calib_data)[5:6] = c("adjusted_test1", "adj_val")
-# Write Calibrated Data CSV --> Used in "qPCR_Plotting" code for visuals
-#write.csv(file="YEAR_MONTH_Calibrated_DF", calib_data)
- 
-# Adjustment: allP - test1 -- Using in model to multiply probability matrix by
-calib_data$diff = calib_data$allP - calib_data$adjusted_test1
 
-## CREATE DATA FRAME WITH ONLY S.Q. AND ADJUSTMENT VAL ##
-calib_adj = calib_data[,c(1,6)]
-
+#average function takes the mean of each 
 average <- function(col1){
   avg = NULL;
   for (i in col1){
@@ -261,7 +251,7 @@ average <- function(col1){
   return(avg)
 }
 ##Subset data by starting quantity
-group = split.data.frame(calib_adj, calib_adj$startq)
+group = split.data.frame(calib_data, calib_data$startq)
 
 adj.test1.avg = NULL;
 for (k in group){
@@ -269,8 +259,8 @@ for (k in group){
 }
 print(adj.test1.avg)
 
-calib_adj = as.data.frame(unique(cbind(as.character(calib_data$startq), adj.test1.avg)))
-calib_adj$adj.test1.avg = as.numeric(as.character(calib_adj$adj.test1.avg))
+calib_adj = unique(as.data.frame(cbind(as.numeric(as.character(calib_data$startq)), adj.test1.avg)))
+
 # Rename columns
 colnames(calib_adj)=c("startq", "adj.test1.avg")
 #############################################
