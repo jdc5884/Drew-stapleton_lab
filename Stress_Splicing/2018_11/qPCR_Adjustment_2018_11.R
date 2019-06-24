@@ -10,6 +10,7 @@ library(dplyr)
 library(MASS)
 library(glm.predict)
 library(Stack)
+library(rowr)
 
 # Mac Directory
 setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_11")
@@ -96,8 +97,7 @@ unusual_obs_2018_11 = reaction %>% filter(reaction$cpD1 < 10)
 
 ########################################################## 
 ################# Calibrated Data Framing ################
-########################################################## 
-library("rowr")
+##########################################################
 # Create/Write data frame for Calibrated values
 calib_data = deriv %>% filter(str_detect(sampleID, "g"))
 # Sort by starting quantity
@@ -109,7 +109,7 @@ calib_data$cpD1 = as.numeric(as.character(calib_data$cpD1))
 
 test1 = filter(calib_data, reaction_type=="test1")[,5]
 allP = filter(calib_data, reaction_type=="all_products")[,4:5]
-#Combine test1 and allP obs, with NA in blank cells
+# Combine test1 and allP obs, with NA in blank cells
 calib_data = as.data.frame(cbind.fill(allP, test1, fill = NA))
 colnames(calib_data) = c("startq", 'allP', "test1")
 
@@ -316,19 +316,22 @@ colnames(calib_adj)=c("startq", "adj.test1.avg")
 ##### Creating the components of the ORLM ######
 # Calculate z-score for calibrated data
 newratiosvector = na.omit(newratiosvector)
+# Remove rows with NA from data frame so zscore can be appended
+newratios.calib = na.omit(newratios.calib)
 zscore = (newratiosvector - mean(newratiosvector))/sd(newratiosvector)
 newratios.calib$zscore = zscore
 # Predict calibrated data ratios using experimental data
-pred.ratio = zscore*sd(ratio.exp)+mean(ratio.exp) #why do we need this???
-newratios.calib$pred.ratio = pred.ratio
+# pred.ratio = zscore*sd(ratio.exp)+mean(ratio.exp) #why do we need this???
+# newratios.calib$pred.ratio = pred.ratio
 # Append y (predicted calibrated ratios) to calibrated data frame -- CALIBRATED RATIOS IN TERMS OF EXPERIMENTAL PARAMETERS
 #no way of knowing if the pred.ratio and the correct starting quantities are lining up correctly #
 #calib_data = cbind(calib_data,newratiosvector, pred.ratio) 
 
 # Ordinal Logistic Regression Model - starting quantity as response to calibrated z-score
-model = polr(as.factor(newratios.calib$startqvector) ~ newratios.calib$pred.ratio, Hess = TRUE)
+#model = polr(as.factor(newratios.calib$startqvector) ~ newratios.calib$pred.ratio, Hess = TRUE)
 # should the model be based off of the relation between startq and pred.ratio or zscore?
 model = polr(as.factor(newratios.calib$startqvector) ~ newratios.calib$zscore, Hess = TRUE)
+
 summary(model)
 (ctable <- coef(summary(model)))
 ## calculate and store p values
@@ -336,6 +339,32 @@ p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
 options(scipen=999)
 ## combined table
 (ctable <- cbind(ctable, "p value" = p))
+
+#MODEL COMPARISON#
+#StartQ ~ test1
+model2 = polr(as.factor(calib_data$startq) ~ calib_data$test1, Hess=TRUE)
+summary(model2)
+(ctable <- coef(summary(model2)))
+## calculate and store p values
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+options(scipen=999)
+## combined table
+(ctable <- cbind(ctable, "p value" = p))
+
+#StartQ ~ AllP
+model3 = polr(as.factor(calib_data$startq) ~ calib_data$allP, Hess=TRUE)
+summary(model3)
+(ctable <- coef(summary(model3)))
+## calculate and store p values
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+options(scipen=999)
+## combined table
+(ctable <- cbind(ctable, "p value" = p))
+
+
+
+
+
 #############################################
 
 # Calculate experimental data z-score
