@@ -114,7 +114,7 @@ lin_model
 
 # OLRM - SQ ~ Test1
 model = polr(as.factor(calib_data$startq) ~ calib_data$test1, Hess = TRUE)
-(summary(model))
+#(summary(model))
 (ctable <- coef(summary(model)))
 ## calculate and store p values
 p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
@@ -122,6 +122,15 @@ options(scipen=999)
 ## combined table
 (ctable <- cbind(ctable, "p value" = p))
 
+# OLRM - SQ ~ allP
+model = polr(as.factor(calib_data$startq) ~ calib_data$allP, Hess = TRUE)
+#(summary(model))
+(ctable <- coef(summary(model)))
+## calculate and store p values
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+options(scipen=999)
+## combined table
+(ctable <- cbind(ctable, "p value" = p))
 
 # #### Month 1 (2018_6) CT ####
 # setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_6")
