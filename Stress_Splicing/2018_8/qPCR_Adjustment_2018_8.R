@@ -245,9 +245,6 @@ calib_data=cbind(calib_data,adjusted_test1,adjusted_val)
 # Write Calibrated Data CSV --> Used in "qPCR_Plotting" code for visuals
 #write.csv(file="YEAR_MONTH_Calibrated_DF", calib_data)
 
-
-
-
 # # Adjustment: allP - test1 -- Using in model to multiply probability matrix by
 # calib_data$diff = calib_data$allP - calib_data$adjusted_test1
 # 
@@ -261,8 +258,6 @@ calib_data=cbind(calib_data,adjusted_test1,adjusted_val)
 #   }
 #   return(avg)
 # }
-
-
 
 # ##Subset data by starting quantity
 group = split.data.frame(calib_data, calib_data$startq)

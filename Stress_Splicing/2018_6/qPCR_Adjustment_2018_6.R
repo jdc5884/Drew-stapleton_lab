@@ -103,13 +103,18 @@ calib_data$cpD1 = as.numeric(as.character(calib_data$cpD1))
 
 test1 = filter(calib_data, reaction_type=="test1")[,5]
 allP = filter(calib_data, reaction_type=="all_products")[,4:5]
+
 #Combine test1 and allP obs, with NA in blank cells
 calib_data = as.data.frame(cbind.fill(allP, test1, fill = NA))
-colnames(calib_data) = c("startq", 'allP', "test1")
-
+colnames(calib_data) = c("startq", 'allP', "test1" )
 # Format starting quantity values as decimals, not scientific notation
 calib_data$startq=as.factor(format(calib_data$startq, scientific=FALSE))
 calib_data$startq=as.factor(calib_data$startq)
+
+#Apply log scale to test1 and allP CT values
+calib_data$allPln = log(calib_data$allP)
+calib_data$test1ln = log(calib_data$test1)
+
 write.csv(calib_data, file = "calib_2018_6.csv")
 
 
@@ -158,6 +163,11 @@ for(i in 1:length(exp_data$sampleID)){
 exp_data = as.data.frame(cbind(sampleID.exp, test1.exp, allP.exp))
 exp_data$test1.exp = as.numeric(as.character(exp_data$test1.exp))
 exp_data$allP.exp = as.numeric(as.character(exp_data$allP.exp))
+
+# Apply log scale to test1 and allP CT values
+exp_data$test1.exp.ln = log(exp_data$test1.exp)
+exp_data$allP.exp.ln = log(exp_data$allP.exp)
+
 write.csv(exp_data, file = "exp_2018_6.csv")
 ### COMPLETED EXPERIMENTAL DATA FRAME ###
 
