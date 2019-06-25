@@ -116,7 +116,7 @@ colnames(calib_data) = c("startq", 'allP', "test1")
 # Format starting quantity values as decimals, not scientific notation
 calib_data$startq=as.factor(format(calib_data$startq, scientific=FALSE))
 calib_data$startq=as.factor(calib_data$startq)
-write.csv(calib_data, file = "calib_2018_11.csv")
+#write.csv(calib_data, file = "calib_2018_11.csv")
 
 
 ### COMPLETED CALIBRATED DATA FRAME ###
@@ -166,12 +166,17 @@ for(i in 1:length(exp_data$sampleID)){
 exp_data = as.data.frame(cbind(sampleID.exp, test1.exp, allP.exp))
 exp_data$test1.exp = as.numeric(as.character(exp_data$test1.exp))
 exp_data$allP.exp = as.numeric(as.character(exp_data$allP.exp))
-write.csv(exp_data, file = "exp_2018_11.csv")
+#write.csv(exp_data, file = "exp_2018_11.csv")
 ### COMPLETED EXPERIMENTAL DATA FRAME ###
+
+
+
+
 
 
 ##########################################################
 ############### Combination Ratios for qPCR ##############
+############### Delete this ##############
 ##########################################################
 
 startquan = as.character(calib_data$startq)
@@ -208,13 +213,16 @@ startqvector = sort(rep(unique(startquan), length(newratios.calib$`0.01`)))
 newratios.calib = as.data.frame(cbind(newratiosvector, startqvector), stringsAsFactors = FALSE)
 
 #################### end combination ratios #####################
-
+###### Delete this #####
 ### CONFUSTION MATRIX ###
 library(caret)
 numLlvs <- 4
 confusionMatrix(
   factor(sample(rep(letters[1:numLlvs], 200), 50)),
   factor(sample(rep(letters[1:numLlvs], 200), 50))) 
+
+#####################
+
 
 
 ##########################################################
@@ -256,12 +264,13 @@ for (k in group){
 }
 print(adj.test1.avg)
 
+# used as a key for the adjustment per start q
 calib_adj = unique(as.data.frame(cbind(as.numeric(as.character(calib_data$startq)), adj.test1.avg)))
 
 # Rename columns
 colnames(calib_adj)=c("startq", "adj.test1.avg")
 #############################################
-
+###### Delete this #####
 # ##### Finding the average adjusted test 1 #########
 # #(this section should be able to be calculated independent of new ratio values)
 # # Create empty vectors for for-loop input 
@@ -313,8 +322,14 @@ colnames(calib_adj)=c("startq", "adj.test1.avg")
 # colnames(calib_adj)=c("startq", "adj.test1.avg")
 # #############################################
 
+################################################
 ##### Creating the components of the ORLM ######
-# Calculate z-score for calibrated data
+################################################
+
+################################################
+###################Delete this##################
+################################################
+## Ratio components ##     may need to be deleted/archived
 newratiosvector = na.omit(newratiosvector)
 # Remove rows with NA from data frame so zscore can be appended
 newratios.calib = na.omit(newratios.calib)
@@ -339,10 +354,14 @@ p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
 options(scipen=999)
 ## combined table
 (ctable <- cbind(ctable, "p value" = p))
+######## end ratio model ########
+
+calib_subset = na.omit(calib_data[,1:3]) 
+#this subset uses the most information without omitting too much data
 
 #MODEL COMPARISON#
 #StartQ ~ test1
-model2 = polr(as.factor(calib_data$startq) ~ calib_data$test1, Hess=TRUE)
+model2 = polr(startq ~ test1,data = calib_subset, Hess=TRUE)
 summary(model2)
 (ctable <- coef(summary(model2)))
 ## calculate and store p values
@@ -350,9 +369,10 @@ p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
 options(scipen=999)
 ## combined table
 (ctable <- cbind(ctable, "p value" = p))
+## test1 pvalue = 0.0007
 
 #StartQ ~ AllP
-model3 = polr(as.factor(calib_data$startq) ~ calib_data$allP, Hess=TRUE)
+model3 = polr(startq ~ allP, data = calib_subset, Hess=TRUE)
 summary(model3)
 (ctable <- coef(summary(model3)))
 ## calculate and store p values
@@ -360,9 +380,17 @@ p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
 options(scipen=999)
 ## combined table
 (ctable <- cbind(ctable, "p value" = p))
+## allP pvalue = 0.0004 -- more significant than test1
 
-
-
+#StartQ ~ AllP + test1 -- this model produces some issues in the polr model and won't run
+model4 = polr(startq ~ allP + test1, data = calib_data, Hess=TRUE)
+summary(model4)
+(ctable <- coef(summary(model4)))
+## calculate and store p values
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+options(scipen=999)
+## combined table
+(ctable <- cbind(ctable, "p value" = p))
 
 
 #############################################
