@@ -240,6 +240,11 @@ options(scipen=999)
 ## combined table
 (ctable <- cbind(ctable, "p value" = p))
 ## allP pvalue = 0.0004 -- more significant than test1
+## Use "ordinalnet" --> use predict.ordinalNet with type="class" option (p. 14)
+## Regularized Ordinal (https://arxiv.org/pdf/1706.05003.pdf) (2.3 (Family Fucntion)) - use Cumulative Property (forward) model
+## ^ Examples in back to run
+## Use for all models
+
 
 #StartQ ~ AllP + test1 -- this model produces some issues in the polr model and won't run
 model4 = polr(startq ~ allP + test1, data = calib_subset, Hess=TRUE)
