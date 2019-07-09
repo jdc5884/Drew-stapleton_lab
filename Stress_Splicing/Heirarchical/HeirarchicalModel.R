@@ -69,20 +69,18 @@ library(MASS)
 # # Create month indicator column
 # calib_data_6$month = strrep('june', length(calib_data_6))
 # =======
-calib_data_6 = read.csv("calib_2018_6.csv")[,-1]
+calib_data_6 = read.csv("../2018_6/calib_2018_6.csv")[,-1]
 calib_data_6$month ='june'
 #>>>>>>> 5f33e18e3fce60a5c0d91821babf3d5b9f6982a3
 calib_data_6
 
 # MONTH 2 (2018_8 / AUGUST) CALIBRATED DATA FRAME
-setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_8")
-calib_data_8 = read.csv("calib_2018_8.csv")[,-1]
+calib_data_8 = read.csv("../2018_8/calib_2018_8.csv")[,-1]
 calib_data_8$month ='aug'
 calib_data_8
 
 # MONTH 3 (2018_11 / NOVEMBER) CALIBRATED DATA FRAME
-setwd("~/Stapleton_Lab/Stapleton_Lab/Stress_Splicing/2018_11")
-calib_data_11 = read.csv("calib_2018_11.csv")[,-1]
+calib_data_11 = read.csv("../2018_11/calib_2018_11.csv")[,-1]
 calib_data_11$month ='nov'
 calib_data_11
 
@@ -98,8 +96,13 @@ calib_data = calib_data[,-4]
 # Drop rows containing NA
 calib_data = drop_na(calib_data)
 
+# Calculating test1 and allp zscores
+calib_data$ztest1 = (calib_data$test1 - mean(calib_data$test1))/sd(calib_data$test1)
+calib_data$zallP = (calib_data$allP - mean(calib_data$allP))/sd(calib_data$allP)
+calib_subset = calib_data[,c(1, 4:7)]
+
 # Ordinal Logistic Regression Model 
-model = polr(as.factor(calib_data$startq) ~ ., data=calib_data, Hess = TRUE)
+model = polr(as.factor(calib_subset$startq) ~ ., data=calib_subset, Hess = TRUE)
 #(summary(model))
 (ctable <- coef(summary(model)))
 ## calculate and store p values
@@ -108,12 +111,9 @@ options(scipen=999)
 ## combined table
 (ctable <- cbind(ctable, "p value" = p))
 
-# Linear Model
-lin_model = lm(as.factor(calib_data$startq) ~ ., data=calib_data)
-lin_model
 
 # OLRM - SQ ~ Test1
-model = polr(as.factor(calib_data$startq) ~ calib_data$test1, Hess = TRUE)
+model = polr(as.factor(calib_subset$startq) ~ calib_subset$ztest1, Hess = TRUE)
 #(summary(model))
 (ctable <- coef(summary(model)))
 ## calculate and store p values
@@ -123,7 +123,7 @@ options(scipen=999)
 (ctable <- cbind(ctable, "p value" = p))
 
 # OLRM - SQ ~ allP
-model = polr(as.factor(calib_data$startq) ~ calib_data$allP, Hess = TRUE)
+model = polr(as.factor(calib_subset$startq) ~ calib_subset$zallP, Hess = TRUE)
 #(summary(model))
 (ctable <- coef(summary(model)))
 ## calculate and store p values

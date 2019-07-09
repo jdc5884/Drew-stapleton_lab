@@ -223,9 +223,9 @@ calib_subset$zallP = (calib_subset$allP - mean(calib_subset$allP))/sd(calib_subs
 
 #MODEL COMPARISON#
 #StartQ ~ test1
-model2 = polr(startq ~ ztest1 ,data = calib_subset, Hess=TRUE)
-summary(model2)
-(ctable <- coef(summary(model2)))
+model1 = polr(startq ~ ztest1 ,data = calib_subset, Hess=TRUE)
+summary(model1)
+(ctable <- coef(summary(model1)))
 ## calculate and store p values
 p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
 options(scipen=999)
@@ -234,9 +234,9 @@ options(scipen=999)
 ## test1 pvalue = 0.0007
 
 #StartQ ~ AllP
-model3 = polr(startq ~ zallP, data = calib_subset, Hess=TRUE)
-summary(model3)
-(ctable <- coef(summary(model3)))
+model2 = polr(startq ~ zallP, data = calib_subset, Hess=TRUE)
+summary(model2)
+(ctable <- coef(summary(model2)))
 ## calculate and store p values
 p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
 options(scipen=999)
