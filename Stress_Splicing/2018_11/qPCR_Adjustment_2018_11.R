@@ -89,7 +89,7 @@ reaction$cpD1 = as.numeric(as.character(reaction$cpD1))
 # Filter unusual observations (CT value less than 10)
 unusual_obs_2018_11 = reaction %>% filter(reaction$cpD1 < 10)
 # Write CSV file 
-#write.csv(unusual_obs_2018_11, file="Unusual_Obs_2018_11.csv")
+write.csv(unusual_obs_2018_11, file="Unusual_Obs_2018_11.csv")
 ### COMPLETED UNUSUAL OBSERVATIONS REMOVAL/REPORTING ###
 
 ########################################################## 
@@ -161,7 +161,7 @@ for(i in 1:length(exp_data$sampleID)){
 exp_data = as.data.frame(cbind(sampleID.exp, test1.exp, allP.exp))
 exp_data$test1.exp = as.numeric(as.character(exp_data$test1.exp))
 exp_data$allP.exp = as.numeric(as.character(exp_data$allP.exp))
-#write.csv(exp_data, file = "exp_2018_11.csv")
+write.csv(exp_data, file = "exp_2018_11.csv")
 ### COMPLETED EXPERIMENTAL DATA FRAME ###
 
 
