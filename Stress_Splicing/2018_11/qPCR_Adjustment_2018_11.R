@@ -213,22 +213,19 @@ colnames(calib_adj)=c("startq", "adj.test1.avg")
 ################################################
 ##### Creating the components of the ORLM ######
 ################################################
-
-
 calib_subset = na.omit(calib_data[,1:3]) 
 #this subset uses the most information without omitting too much data
 
+#zscores of the allp and test1
+calib_subset$ztest1 = (calib_subset$test1 - mean(calib_subset$test1))/sd(calib_subset$test1)
+calib_subset$zallP = (calib_subset$allP - mean(calib_subset$allP))/sd(calib_subset$allP)
+
+
 #MODEL COMPARISON#
 #StartQ ~ test1
-
-model1 = polr(startq ~ ztest1 ,data = calib_subset, Hess=TRUE)
-summary(model1)
-(ctable <- coef(summary(model1)))
-
-model2 = polr(startq ~ test1,data = calib_subset, Hess=TRUE)
+model2 = polr(startq ~ ztest1 ,data = calib_subset, Hess=TRUE)
 summary(model2)
 (ctable <- coef(summary(model2)))
-
 ## calculate and store p values
 p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
 options(scipen=999)
@@ -237,15 +234,9 @@ options(scipen=999)
 ## test1 pvalue = 0.0007
 
 #StartQ ~ AllP
-
-model2 = polr(startq ~ zallP, data = calib_subset, Hess=TRUE)
-summary(model2)
-(ctable <- coef(summary(model2)))
-
-model3 = polr(startq ~ allP, data = calib_subset, Hess=TRUE)
+model3 = polr(startq ~ zallP, data = calib_subset, Hess=TRUE)
 summary(model3)
 (ctable <- coef(summary(model3)))
-
 ## calculate and store p values
 p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
 options(scipen=999)
@@ -259,7 +250,7 @@ options(scipen=999)
 
 
 #StartQ ~ AllP + test1 -- this model produces some issues in the polr model and won't run
-model4 = polr(startq ~ allP + test1, data = calib_subset, Hess=TRUE)
+model4 = polr(startq ~ zallP + ztest1, data = calib_subset, Hess=TRUE)
 summary(model4)
 (ctable <- coef(summary(model4)))
 ## calculate and store p values
@@ -267,6 +258,53 @@ p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
 options(scipen=999)
 ## combined table
 (ctable <- cbind(ctable, "p value" = p))
+
+
+### using ordinalNet package ###
+library("ordinalNet")
+
+#define ordinal model startq~test
+ordmod1 = ordinalNet(as.matrix(calib_subset$ztest1), calib_subset$startq)
+summary(ordmod1)
+coef(ordmod1, matrix=TRUE)
+#kfold cv
+set.seed(123)
+ordfit1 = ordinalNetTune(as.matrix(calib_subset$ztest1), calib_subset$startq, family = "cumulative",
+                         link = "logit", parallelTerms = TRUE, nonparallelTerms = TRUE, 
+                         warn = FALSE, printProgress = FALSE)
+head(ordfit1$loglik)
+bestLambdaIndex = which.max(rowMeans(ordfit1$loglik))
+head(coef(ordfit1$fit, matrix = TRUE, whichLambda = bestLambdaIndex))
+#interpretation???
+
+#define ordinal model starq~allp
+ordmod2 = ordinalNet(as.matrix(calib_subset$zallP), calib_subset$startq)
+summary(ordmod2)
+coef(ordmod2, matrix=TRUE)
+#kfold cv
+set.seed(123)
+ordfit2 = ordinalNetTune(as.matrix(calib_subset$zallP), calib_subset$startq, family = "cumulative",
+                         link = "logit", parallelTerms = TRUE, nonparallelTerms = TRUE, 
+                         warn = FALSE, printProgress = FALSE)
+head(ordfit2$loglik)
+bestLambdaIndex = which.max(rowMeans(ordfit2$loglik))
+head(coef(ordfit2$fit, matrix = TRUE, whichLambda = bestLambdaIndex))
+#interpretation???
+
+#define ordinal model starq~allP and test1
+ordmod3 = ordinalNet(as.matrix(calib_subset[,4:5]), calib_subset$startq)
+summary(ordmod3)
+coef(ordmod3, matrix=TRUE)
+#kfold cv
+set.seed(123)
+ordfit3 = ordinalNetTune(as.matrix(calib_subset[,4:5]), calib_subset$startq, family = "cumulative",
+                         link = "logit", parallelTerms = TRUE, nonparallelTerms = TRUE, 
+                         warn = FALSE, printProgress = FALSE)
+head(ordfit3$loglik)
+bestLambdaIndex = which.max(rowMeans(ordfit3$loglik))
+head(coef(ordfit3$fit, matrix = TRUE, whichLambda = bestLambdaIndex))
+#interpretation???
+
 
 #############################################
 
