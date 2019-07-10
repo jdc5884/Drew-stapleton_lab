@@ -94,7 +94,7 @@ calib_data$aug = ifelse(str_detect(calib_data[,4], "aug"), 1, 0)
 calib_data = calib_data[,-4]
 
 # Drop rows containing NA
-calib_data = drop_na(calib_data)
+calib_data = na.omit(calib_data)
 
 # Calculating test1 and allp zscores
 calib_data$ztest1 = (calib_data$test1 - mean(calib_data$test1))/sd(calib_data$test1)
@@ -113,9 +113,9 @@ options(scipen=999)
 
 
 # OLRM - SQ ~ Test1
-model = polr(as.factor(calib_subset$startq) ~ calib_subset$ztest1, Hess = TRUE)
+model1 = polr(as.factor(calib_subset$startq) ~ ztest1 + june + aug, data = calib_subset, Hess = TRUE)
 #(summary(model))
-(ctable <- coef(summary(model)))
+(ctable <- coef(summary(model1)))
 ## calculate and store p values
 p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
 options(scipen=999)
@@ -123,9 +123,9 @@ options(scipen=999)
 (ctable <- cbind(ctable, "p value" = p))
 
 # OLRM - SQ ~ allP
-model = polr(as.factor(calib_subset$startq) ~ calib_subset$zallP, Hess = TRUE)
+model2 = polr(as.factor(calib_subset$startq) ~ zallP + june + aug, data = calib_subset, Hess = TRUE)
 #(summary(model))
-(ctable <- coef(summary(model)))
+(ctable <- coef(summary(model2)))
 ## calculate and store p values
 p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
 options(scipen=999)
