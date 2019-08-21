@@ -79,18 +79,18 @@ legend('topright', legend=c("Test 1", "All Products"),
        col=c("blue", "red"), lty = 1, cex=0.8)
 #####
 
-###### POLR models ######
-# Ordinal Logistic Regression Model 
-model = polr(as.factor(calib_subset$startq) ~ ., data=calib_subset, Hess = TRUE)
-#(summary(model))
-(ctable <- coef(summary(model)))
-## calculate and store p values
-p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
-options(scipen=999)
-## combined table
-(ctable <- cbind(ctable, "p value" = p))
-
-###### Ordinal Net models #######
+# ###### POLR models ######
+# # Ordinal Logistic Regression Model 
+# model = polr(as.factor(calib_subset$startq) ~ ., data=calib_subset, Hess = TRUE)
+# #(summary(model))
+# (ctable <- coef(summary(model)))
+# ## calculate and store p values
+# p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+# options(scipen=999)
+# ## combined table
+# (ctable <- cbind(ctable, "p value" = p))
+# 
+# ###### Ordinal Net models #######
 
 #define ordinal model starq~zallP+ztest1+month
 ordmod = ordinalNet(as.matrix(calib_subset[,2:5]), as.factor(calib_subset$startq))
@@ -169,16 +169,22 @@ calib_data$adjusted_test1 = calib_data$test1 + adjval
 
 # used as a key for the adjustment per start q
 calib_adj = as.data.frame(cbind(as.numeric(as.character(unique(calib_data$startq))), unique(calib_data$adjval)))
+#convert adjustment from picograms to femtograms (1:1000)
+calib_adj$adj = (calib_adj$adj)*1000
 
 # Rename columns
 colnames(calib_adj)=c("startq", "adj")
 
-# Apply probability matrix to the adjustment values
-apply(probmat, 1, function(x) x*calib_adj$adj)
-exp_data$exp.adjust = colSums(apply(probmat, 1, function(x) x*calib_adj$adj))
+# convert test1 and allp to femtograms
+exp_data[,c(2,3)] = exp_data[,c(2,3)]*1000
+
+# Apply probability matrix to the adjustment values using matrix multiplication 
+exp_data$exp.adjust = probmat%*%calib_adj$adj
 
 # Create new column with stress product (VQTL input)
 exp_data$exp.adjustTest1 = exp_data$test1.exp+exp_data$exp.adjust
+
+# convert allP and adjusted test 1 to femtograms
 exp_data$stress = exp_data$allP.exp - exp_data$exp.adjustTest1
 
 boxplot(exp_data$allP.exp, exp_data$test1.exp, exp_data$stress, main = "Boxplot of Experimental All Products, Test 1, and Stress",
