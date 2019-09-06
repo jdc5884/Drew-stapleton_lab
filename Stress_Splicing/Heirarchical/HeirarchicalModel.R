@@ -79,6 +79,9 @@ legend('topright', legend=c("Test 1", "All Products"),
        col=c("blue", "red"), lty = 1, cex=0.8)
 #####
 
+hist(calib_data$allP, col = "red")
+hist(calib_data$test1, col = "blue")
+
 # ###### POLR models ######
 # # Ordinal Logistic Regression Model 
 # model = polr(as.factor(calib_subset$startq) ~ ., data=calib_subset, Hess = TRUE)
@@ -161,19 +164,14 @@ for (k in group){
   adjval = c(adjval,adj(k$allP, k$test1))
 }
 
-calib_data$adjval = adjval
-calib_data$adjusted_test1 = calib_data$test1 + adjval
-
 
 ##### Creating a dataframe with the stq and adjustment values #########
+calib_adj = cbind(unique(calib_data$startq), unique(adjval))
+colnames(calib_adj) = c("startq", "adj")
 
-# used as a key for the adjustment per start q
-calib_adj = as.data.frame(cbind(as.numeric(as.character(unique(calib_data$startq))), unique(calib_data$adjval)))
 #convert adjustment from picograms to femtograms (1:1000)
 calib_adj$adj = (calib_adj$adj)*1000
 
-# Rename columns
-colnames(calib_adj)=c("startq", "adj")
 
 # convert test1 and allp to femtograms
 exp_data[,c(2,3)] = exp_data[,c(2,3)]*1000
@@ -190,7 +188,8 @@ exp_data$stress = exp_data$allP.exp - exp_data$exp.adjustTest1
 boxplot(exp_data$allP.exp, exp_data$test1.exp, exp_data$stress, main = "Boxplot of Experimental All Products, Test 1, and Stress",
         names =c("All Products", "Test 1", "Stress"), ylab = "Cp value", col =c("blue", "red", "green"))
 
-
-
-
-
+hist(exp_data$stress, col = "light blue")
+### analyzing negative stress ###
+negstress = na.omit(ifelse(exp_data$stress<0,exp_data$stress,NA))
+hist(negstress, col = "light green")
+length(negstress)/length(exp_data$stress)
