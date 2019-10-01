@@ -5,6 +5,9 @@ library(stringr)
 ## Ordinal Net package ##
 library("ordinalNet")
 
+# set directory to the Heirarchical folder
+setwd("C:/Users/twili/Desktop/GIThub/Andrew/stapleton_lab/Stress_Splicing/Heirarchical")
+
 #### reading in and setting up calibrated data ####
 # MONTH 1 (2018_6 / JUNE) CALIBRATED DATA FRAME 
 calib_data_6 = na.omit(read.csv("../2018_6/calib_2018_6.csv")[,-1])
@@ -33,10 +36,10 @@ calib_data = rbind(calib_data_6, calib_data_8, calib_data_11)
 # Create dummy varible columns for each month
 calib_data$june = ifelse(str_detect(calib_data[,6], "june"), 1, 0)
 calib_data$aug = ifelse(str_detect(calib_data[,6], "aug"), 1, 0)
-calib_data = calib_data[,-6]
+#calib_data = calib_data[,-6]
 
-# Drop rows containing NA
-calib_subset = calib_data[,c(1, 4:7)]
+# create a subset only containing the startq, zvalues, and dummy months
+calib_subset = calib_data[,c(1, 4,5,8,7)]
 ######
 
 #### Plotting calibrated data ####
@@ -140,10 +143,10 @@ exp_data = rbind(exp_data_6, exp_data_8, exp_data_11)
 # Create dummy varible columns for each month
 exp_data$june = ifelse(str_detect(exp_data[,6], "june"), 1, 0)
 exp_data$aug = ifelse(str_detect(exp_data[,6], "aug"), 1, 0)
-exp_data = exp_data[,-6]
+
 
 # Drop rows containing NA
-exp_subset = exp_data[,c(1, 4:7)]
+exp_subset = exp_data[,c(1, 4, 5, 7, 8)]
 
 #### calculating experimental starting quantity ####
 probmat = predict(ordfit$fit, as.matrix(exp_subset[,2:5]))
@@ -166,7 +169,7 @@ for (k in group){
 
 
 ##### Creating a dataframe with the stq and adjustment values #########
-calib_adj = cbind(unique(calib_data$startq), unique(adjval))
+calib_adj = as.data.frame(cbind(unique(calib_data$startq), unique(adjval)))
 colnames(calib_adj) = c("startq", "adj")
 
 #convert adjustment from picograms to femtograms (1:1000)
@@ -193,3 +196,6 @@ hist(exp_data$stress, col = "light blue")
 negstress = na.omit(ifelse(exp_data$stress<0,exp_data$stress,NA))
 hist(negstress, col = "light green")
 length(negstress)/length(exp_data$stress)
+
+### Write the exp data with the stress product as a new data frame for vqtl matching
+write.csv(exp_data, "Hierarchical_exp_data_stress.csv")

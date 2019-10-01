@@ -5,6 +5,9 @@ library(stringr)
 ## Ordinal Net package ##
 library("ordinalNet")
 
+#set working directory to ByMonthAnalysis folder
+setwd("C:/Users/twili/Desktop/GIThub/Andrew/stapleton_lab/Stress_Splicing/ByMonthAnalysis")
+
 #####################################
 ###### MONTH 1 (2018_6 / JUNE) ######
 #####################################
@@ -70,12 +73,13 @@ adj6$adj = (adj6$adj)*1000
 exp_data_6[,c(2,3)] = exp_data_6[,c(2,3)]*1000
 
 # Apply probability matrix to the adjustment values using matrix multiplication 
+# this creates a weighted average for the adjustment for each observation
 exp_data_6$exp.adjust = probmat6%*%adj6$adj
 
-# Create new column with stress product (VQTL input)
+# calculate the adjusted test 1
 exp_data_6$exp.adjustTest1 = exp_data_6$test1.exp+exp_data_6$exp.adjust
 
-# convert allP and adjusted test 1 to femtograms
+# Create new column with stress product (VQTL input)
 exp_data_6$stress = exp_data_6$allP.exp - exp_data_6$exp.adjustTest1
 summary(exp_data_6$stress)
 boxplot(exp_data_6$stress)
@@ -83,7 +87,8 @@ head(sort(exp_data_6$stress), 20)
 ### analyzing negative stress ###
 negstress6 = na.omit(ifelse(exp_data_6$stress<0,exp_data_6$stress,NA))
 hist(negstress6, col = "light green")
-length(negstress6)/length(exp_data_6$stress) # 29.89% of stress is negative
+length(negstress6)/length(exp_data_6$stress) # 29.49% of stress is negative
+
 
 ######################## End of June ########################
 
@@ -237,7 +242,7 @@ length(negstress11)/length(exp_data_11$stress) # 7.14% of stress is negative
 
 ###################### End of November ######################
 
+allStress = c(exp_data_6$stress, exp_data_11$stress, exp_data_8$stress)
+NegStress = c(negstress11, negstress6, negstress8)
 
-
-
-
+length(NegStress)/length(allStress)

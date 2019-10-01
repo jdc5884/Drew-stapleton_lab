@@ -1,5 +1,7 @@
-setwd("/Users/andrewnorris/stapleton_lab/Stress_Splicing")
+setwd("C:/Users/twili/Desktop/GIThub/Andrew/stapleton_lab/Stress_Splicing/2016_Clayton")
 SamplingPlan=read.csv(file="Field Book (2016) - Clayton - Sampling Plan_RAW DATA.csv", header=TRUE)
+sampNum = c(seq(1, dim(SamplingPlan)[1]))
+SamplingPlan = cbind(sampNum, SamplingPlan)
 SamplingPlanTidy=SamplingPlan[-c(505:516, 769:780, 949:960, 1129:1140, 1421:1424, 1813, 1838), ]
 
 # Removed Rows:
