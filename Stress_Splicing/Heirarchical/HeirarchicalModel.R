@@ -193,9 +193,14 @@ boxplot(exp_data$allP.exp, exp_data$test1.exp, exp_data$stress, main = "Boxplot 
 
 hist(exp_data$stress, col = "light blue")
 ### analyzing negative stress ###
-negstress = na.omit(ifelse(exp_data$stress<0,exp_data$stress,NA))
-hist(negstress, col = "light green")
-length(negstress)/length(exp_data$stress)
+negstress = exp_data %>% filter(exp_data$stress<0)
+hist(negstress$stress, col = "light green")
+length(negstress$stress)/length(exp_data$stress)
+
+# making negstress "NA" #
+na.obs = match(negstress$stress,exp_data$stress) #returns list of incices
+# we want to replace the negative values with N/A
+exp_data[na.obs, ] = NA
 
 ### Write the exp data with the stress product as a new data frame for vqtl matching
 write.csv(exp_data, "Hierarchical_exp_data_stress.csv")

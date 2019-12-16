@@ -53,7 +53,7 @@ dat2[1:20, 1:20]
 ######### Including plate data #########
 ########################################
 
-colnames(dat2)[2] = "sampleID.exp"
+colnames(dat2)[4] = "sampleID.exp"
 
 # ### by month framing ####
 # 
@@ -92,12 +92,15 @@ AugNov = merge(AugNov, dat2, by = "sampleID.exp")
 #making sure that non of the genotype information was matched to more than on obs
 bad =intersect(June$Barcode, AugNov$Barcode)
 length(bad)
-
-
 baddoup = AugNov[match(bad, AugNov$Barcode),1:20]
-# all of the bad doubplicates observations are in November
+repJune = June[c(21,32),] # we want to replace the repeated values in June with N/A
+June[c(21,32), ] = NA
 
-
+full = rbind(June, AugNov)
+#moving stress to the first column
+head(names(full), 20)
+full = cbind(full$stress, full[,-12])
+colnames(full)[1] = "stress"
 #####Adding marker location and chromosome#####
 
 addmarker <- function(full, plate){
@@ -116,23 +119,21 @@ addmarker <- function(full, plate){
 }
 
 #make sure to delete extra 0's and also delete '('
-
-#all months data setup
-#vqtl_stress = addmarker(full)
-#notneed = c(1:6,9:11,13,14,16:21)
-#write.csv(vqtl_stress[,-notneed], file = "vqtl_stress_input.csv" ,row.names = FALSE)
-
-vqtl_11 = addmarker(full_11)
+full = addmarker(full)
 #unnecessary columns for vQTL input, we only need: Stress, breedtype, genotype, barcode
-notneed = c(1:6,9:11,13,14,16:21)
-#write.csv(vqtl_11[,-notneed], file = "../2018_11/vqtlinput_11.csv" ,row.names = FALSE)
-vqtl_6 = addmarker(full_6)
-#write.csv(vqtl_11, file = "../2018_6/vqtlinput_6.csv" ,row.names = FALSE)
-vqtl_8 = addmarker(full_8)
-#write.csv(vqtl_11, file = "../2018_8/vqtlinput_8.csv" ,row.names = FALSE)
-
-
+notneed = c(3:7,9:12,14:17,19:26)
+full = full[,-notneed]
+write.csv(full, file = "../Heirarchical/vqtlinput.csv" ,row.names = FALSE)
 
 
 #####MAKE SURE TO DELETE THE EXTRA ZEROS IN [1:2,1:4] IN EXCEL AFTERWARDS#####
+head(names(full), 30) #BreedType = index 13
+
+#needed blank space for vqtl
+blanksp = full[1:2,]
+
+FullInb = full %>% filter(str_detect(full$BreedType, "Inbred") == TRUE)
+FullHyb = full %>% filter(str_detect(full$BreedType, "Hybrid") == TRUE)
+write.csv(rbind(blanksp,FullInb), file = "../Heirarchical/FullInbvqtlinput.csv" ,row.names = FALSE)
+write.csv(rbind(blanksp,FullHyb), file = "../Heirarchical/FullHybvqtlinput.csv" ,row.names = FALSE)
 
