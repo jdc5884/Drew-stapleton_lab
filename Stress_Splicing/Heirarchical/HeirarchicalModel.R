@@ -198,7 +198,7 @@ hist(negstress$stress, col = "light green")
 length(negstress$stress)/length(exp_data$stress)
 
 # making negstress "NA" #
-na.obs = match(negstress$stress,exp_data$stress) #returns list of incices
+na.obs = match(negstress$stress,exp_data$stress) #returns list of indicies
 # we want to replace the negative values with N/A
 exp_data[na.obs, ] = NA
 
